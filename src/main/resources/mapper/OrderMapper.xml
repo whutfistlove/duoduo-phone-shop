@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.duoduo.phoneshop.mapper.OrderMapper">
+    <resultMap id="BaseResultMap" type="com.duoduo.phoneshop.entity.Order">
+        <id column="id" property="id" jdbcType="BIGINT"/>
+        <result column="orderNo" property="orderNo" jdbcType="VARCHAR"/>
+        <result column="userId" property="userId" jdbcType="BIGINT"/>
+        <result column="addressId" property="addressId" jdbcType="BIGINT"/>
+        <result column="totalAmount" property="totalAmount" jdbcType="DECIMAL"/>
+        <result column="payAmount" property="payAmount" jdbcType="DECIMAL"/>
+        <result column="status" property="status" jdbcType="INTEGER"/>
+        <result column="payTime" property="payTime" jdbcType="TIMESTAMP"/>
+        <result column="deliveryTime" property="deliveryTime" jdbcType="TIMESTAMP"/>
+        <result column="receiveTime" property="receiveTime" jdbcType="TIMESTAMP"/>
+        <result column="remark" property="remark" jdbcType="VARCHAR"/>
+        <result column="createTime" property="createTime" jdbcType="TIMESTAMP"/>
+        <result column="updateTime" property="updateTime" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <resultMap id="OrderDetailMap" type="com.duoduo.phoneshop.entity.Order" extends="BaseResultMap">
+        <association property="user" javaType="com.duoduo.phoneshop.entity.User">
+            <id column="u_id" property="id"/>
+            <result column="u_usern" property="usern"/>
+            <result column="u_realN" property="realN"/>
+            <result column="u_phone" property="phone"/>
+        </association>
+        <association property="address" javaType="com.duoduo.phoneshop.entity.Address">
+            <id column="a_id" property="id"/>
+            <result column="a_receiverN" property="receiverN"/>
+            <result column="a_receiverPhone" property="receiverPhone"/>
+            <result column="a_province" property="province"/>
+            <result column="a_city" property="city"/>
+            <result column="a_district" property="district"/>
+            <result column="a_detailAddress" property="detailAddress"/>
+        </association>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, orderNo, userId, addressId, totalAmount, payAmount, status,
+        payTime, deliveryTime, receiveTime, remark, createTime, updateTime
+    </sql>
+
+    <insert id="insert" parameterType="com.duoduo.phoneshop.entity.Order" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO `order` (orderNo, userId, addressId, totalAmount, payAmount,
+                             status, remark)
+        VALUES (#{orderNo}, #{userId}, #{addressId}, #{totalAmount}, #{payAmount},
+                #{status}, #{remark})
+    </insert>
+
+    <select id="selectById" resultMap="OrderDetailMap">
+        SELECT o.id, o.orderNo, o.userId, o.addressId, o.totalAmount,
+               o.payAmount, o.status, o.payTime, o.deliveryTime, o.receiveTime,
+               o.remark, o.createTime, o.updateTime,
+               u.id as u_id, u.usern as u_usern, u.realN as u_realN,
+               u.phone as u_phone,
+               a.id as a_id, a.receiverN as a_receiverN,
+               a.receiverPhone as a_receiverPhone, a.province as a_province,
+               a.city as a_city, a.district as a_district,
+               a.detailAddress as a_detailAddress
+        FROM `order` o
+                 LEFT JOIN user u ON o.userId = u.id
+                 LEFT JOIN address a ON o.addressId = a.id
+        WHERE o.id = #{id}
+    </select>
+
+    <select id="selectByUser" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM `order`
+        WHERE userId = #{userId}
+        ORDER BY createTime DESC
+    </select>
+
+    <select id="selectAll" resultMap="OrderDetailMap">
+        SELECT o.id, o.orderNo, o.userId, o.addressId, o.totalAmount,
+               o.payAmount, o.status, o.payTime, o.deliveryTime, o.receiveTime,
+               o.remark, o.createTime, o.updateTime,
+               u.id as u_id, u.usern as u_usern, u.realN as u_realN,
+               u.phone as u_phone,
+               a.id as a_id, a.receiverN as a_receiverN,
+               a.receiverPhone as a_receiverPhone, a.province as a_province,
+               a.city as a_city, a.district as a_district,
+               a.detailAddress as a_detailAddress
+        FROM `order` o
+                 LEFT JOIN user u ON o.userId = u.id
+                 LEFT JOIN address a ON o.addressId = a.id
+        ORDER BY o.createTime DESC
+    </select>
+
+    <select id="selectByStatus" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM `order`
+        WHERE status = #{status}
+        ORDER BY createTime DESC
+    </select>
+
+    <update id="update" parameterType="com.duoduo.phoneshop.entity.Order">
+        UPDATE `order`
+        <set>
+            <if test="status != null">status = #{status},</if>
+            <if test="payTime != null">payTime = #{payTime},</if>
+            <if test="deliveryTime != null">deliveryTime = #{deliveryTime},</if>
+            <if test="receiveTime != null">receiveTime = #{receiveTime},</if>
+            <if test="remark != null">remark = #{remark},</if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <delete id="delete">
+        DELETE FROM `order` WHERE id = #{id}
+    </delete>
+
+    <select id="getTotalSales" resultType="java.math.BigDecimal">
+        SELECT IFNULL(SUM(payAmount), 0)
+        FROM `order`
+        WHERE status IN (1, 2, 3)
+    </select>
+
+    <select id="getTodayOrderCount" resultType="java.lang.Integer">
+        SELECT COUNT(*)
+        FROM `order`
+        WHERE DATE(createTime) = CURDATE()
+    </select>
+
+    <select id="getMonthOrderCount" resultType="java.lang.Integer">
+        SELECT COUNT(*)
+        FROM `order`
+        WHERE YEAR(createTime) = YEAR(CURDATE())
+          AND MONTH(createTime) = MONTH(CURDATE())
+    </select>
+</mapper>
