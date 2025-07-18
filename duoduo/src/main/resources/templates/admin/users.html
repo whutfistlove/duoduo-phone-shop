@@ -35,6 +35,18 @@
             background-color: #17a2b8;
             color: #fff;
         }
+        .search-form {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .search-form .form-control {
+            border-radius: 5px;
+        }
+        .search-form .btn {
+            border-radius: 5px;
+        }
     </style>
 </head>
 <body>
@@ -108,8 +120,95 @@
             <!-- 提示信息 -->
             <div id="alertContainer"></div>
 
+            <!-- 查询表单 -->
+            <div class="search-form">
+                <form id="searchForm">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="mb-3">
+                                <label for="searchUsern" class="form-label">用户名</label>
+                                <input type="text" class="form-control" id="searchUsern" name="usern" placeholder="输入用户名">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="mb-3">
+                                <label for="searchEmail" class="form-label">邮箱</label>
+                                <input type="email" class="form-control" id="searchEmail" name="email" placeholder="输入邮箱">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="mb-3">
+                                <label for="searchPhone" class="form-label">手机号</label>
+                                <input type="tel" class="form-control" id="searchPhone" name="phone" placeholder="输入手机号">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="mb-3">
+                                <label for="searchRealN" class="form-label">真实姓名</label>
+                                <input type="text" class="form-control" id="searchRealN" name="realN" placeholder="输入真实姓名">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="mb-3">
+                                <label for="searchRole" class="form-label">角色</label>
+                                <select class="form-select" id="searchRole" name="role">
+                                    <option value="">全部</option>
+                                    <option value="USER">普通用户</option>
+                                    <option value="ADMIN">管理员</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="mb-3">
+                                <label for="searchStatus" class="form-label">状态</label>
+                                <select class="form-select" id="searchStatus" name="status">
+                                    <option value="">全部</option>
+                                    <option value="1">正常</option>
+                                    <option value="0">禁用</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="mb-3">
+                                <label for="searchStartDate" class="form-label">注册开始日期</label>
+                                <input type="date" class="form-control" id="searchStartDate" name="startDate">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="mb-3">
+                                <label for="searchEndDate" class="form-label">注册结束日期</label>
+                                <input type="date" class="form-control" id="searchEndDate" name="endDate">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="d-flex gap-2">
+                                <button type="button" class="btn btn-primary" id="searchBtn">
+                                    <i class="fa fa-search"></i> 查询
+                                </button>
+                                <button type="button" class="btn btn-secondary" id="resetBtn">
+                                    <i class="fa fa-refresh"></i> 重置
+                                </button>
+                                <button type="button" class="btn btn-success" id="exportBtn">
+                                    <i class="fa fa-download"></i> 导出
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
             <!-- 用户列表 -->
             <div class="card">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0">用户列表</h6>
+                        <span class="badge bg-info" id="totalCount">共 <span th:text="${totalCount}">0</span> 条记录</span>
+                    </div>
+                </div>
                 <div class="card-body">
                     <div class="table-responsive">
                         <table class="table table-hover" id="userTable">
@@ -165,6 +264,19 @@
 
                     <div th:if="${users.isEmpty()}" class="text-center py-4">
                         <p class="text-muted">暂无用户数据</p>
+                    </div>
+
+                    <!-- 分页 -->
+                    <div class="d-flex justify-content-between align-items-center mt-3" th:if="${!users.isEmpty()}">
+                        <div class="text-muted">
+                            显示第 <span id="currentStart">1</span> 到 <span id="currentEnd">10</span> 条记录，
+                            共 <span id="totalRecords" th:text="${totalCount}">0</span> 条
+                        </div>
+                        <nav aria-label="用户分页">
+                            <ul class="pagination mb-0" id="pagination">
+                                <!-- 分页按钮将通过JavaScript动态生成 -->
+                            </ul>
+                        </nav>
                     </div>
                 </div>
             </div>
@@ -286,6 +398,8 @@
     $(document).ready(function() {
         let isEdit = false;
         let currentUserId = null;
+        let currentPage = 1;
+        let pageSize = 10;
 
         // 显示提示信息
         function showAlert(message, type = 'success') {
@@ -303,6 +417,203 @@
             }, 3000);
         }
 
+        // 加载用户数据
+        function loadUsers(page = 1) {
+            currentPage = page;
+            const formData = new FormData($('#searchForm')[0]);
+            formData.append('page', page);
+            formData.append('size', pageSize);
+
+            $.ajax({
+                url: '/admin/users/search',
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(response) {
+                    if (response.success) {
+                        updateUserTable(response.data.users);
+                        updatePagination(response.data.totalPages, response.data.currentPage, response.data.totalCount);
+                        $('#totalCount').html('共 ' + response.data.totalCount + ' 条记录');
+                    } else {
+                        showAlert(response.message || '查询失败', 'danger');
+                    }
+                },
+                error: function() {
+                    showAlert('查询失败，请重试', 'danger');
+                }
+            });
+        }
+
+        // 更新用户表格
+        function updateUserTable(users) {
+            const tbody = $('#userTable tbody');
+            tbody.empty();
+
+            if (users.length === 0) {
+                tbody.html('<tr><td colspan="10" class="text-center text-muted">暂无用户数据</td></tr>');
+                return;
+            }
+
+            users.forEach(user => {
+                const roleClass = user.role === 'ADMIN' ? 'role-admin' : 'role-user';
+                const statusClass = user.status === 1 ? 'status-active' : 'status-inactive';
+                const statusIcon = user.status === 1 ? 'fa-check-circle' : 'fa-times-circle';
+                const statusText = user.status === 1 ? '正常' : '禁用';
+
+                const row = `
+                    <tr>
+                        <td>${user.id}</td>
+                        <td>${user.usern}</td>
+                        <td>${user.email}</td>
+                        <td>${user.phone || '-'}</td>
+                        <td>${user.realN || '-'}</td>
+                        <td>￥${user.balance.toFixed(2)}</td>
+                        <td><span class="badge ${roleClass}">${user.role}</span></td>
+                        <td><span class="${statusClass}"><i class="fa ${statusIcon}"></i> ${statusText}</span></td>
+                        <td>${new Date(user.createTime).toLocaleDateString()}</td>
+                        <td>
+                            <button class="btn btn-sm btn-primary edit-btn" data-id="${user.id}">
+                                <i class="fa fa-edit"></i>
+                            </button>
+                            <button class="btn btn-sm btn-danger delete-btn" data-id="${user.id}" data-name="${user.usern}">
+                                <i class="fa fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+                tbody.append(row);
+            });
+
+            // 重新绑定事件
+            bindTableEvents();
+        }
+
+        // 更新分页
+        function updatePagination(totalPages, currentPage, totalCount) {
+            const pagination = $('#pagination');
+            pagination.empty();
+
+            if (totalPages <= 1) return;
+
+            // 上一页
+            if (currentPage > 1) {
+                pagination.append(`
+                    <li class="page-item">
+                        <a class="page-link" href="#" data-page="${currentPage - 1}">上一页</a>
+                    </li>
+                `);
+            }
+
+            // 页码
+            const startPage = Math.max(1, currentPage - 2);
+            const endPage = Math.min(totalPages, currentPage + 2);
+
+            for (let i = startPage; i <= endPage; i++) {
+                const activeClass = i === currentPage ? 'active' : '';
+                pagination.append(`
+                    <li class="page-item ${activeClass}">
+                        <a class="page-link" href="#" data-page="${i}">${i}</a>
+                    </li>
+                `);
+            }
+
+            // 下一页
+            if (currentPage < totalPages) {
+                pagination.append(`
+                    <li class="page-item">
+                        <a class="page-link" href="#" data-page="${currentPage + 1}">下一页</a>
+                    </li>
+                `);
+            }
+
+            // 绑定分页事件
+            pagination.find('.page-link').click(function(e) {
+                e.preventDefault();
+                const page = parseInt($(this).data('page'));
+                loadUsers(page);
+            });
+
+            // 更新显示信息
+            const start = (currentPage - 1) * pageSize + 1;
+            const end = Math.min(currentPage * pageSize, totalCount);
+            $('#currentStart').text(start);
+            $('#currentEnd').text(end);
+            $('#totalRecords').text(totalCount);
+        }
+
+        // 绑定表格事件
+        function bindTableEvents() {
+            // 编辑用户
+            $('.edit-btn').click(function() {
+                const userId = $(this).data('id');
+                isEdit = true;
+                currentUserId = userId;
+                $('#userModalTitle').text('编辑用户');
+                $('#password').attr('required', false);
+                $('#passwordHelp').show();
+
+                // 获取用户信息
+                $.get('/admin/users/get/' + userId, function(response) {
+                    if (response.success) {
+                        const user = response.data;
+                        $('#userId').val(user.id);
+                        $('#usern').val(user.usern);
+                        $('#password').val('');
+                        $('#email').val(user.email);
+                        $('#phone').val(user.phone);
+                        $('#realN').val(user.realN);
+                        $('#balance').val(user.balance);
+                        $('#role').val(user.role);
+                        $('#status').val(user.status);
+                        $('#userModal').modal('show');
+                    } else {
+                        showAlert(response.message || '获取用户信息失败', 'danger');
+                    }
+                }).fail(function() {
+                    showAlert('请求失败，请重试', 'danger');
+                });
+            });
+
+            // 删除用户
+            $('.delete-btn').click(function() {
+                const userId = $(this).data('id');
+                const userName = $(this).data('name');
+
+                currentUserId = userId;
+                $('#deleteUserName').text(userName);
+                $('#deleteModal').modal('show');
+            });
+        }
+
+        // 查询按钮点击事件
+        $('#searchBtn').click(function() {
+            loadUsers(1);
+        });
+
+        // 重置按钮点击事件
+        $('#resetBtn').click(function() {
+            $('#searchForm')[0].reset();
+            loadUsers(1);
+        });
+
+        // 导出按钮点击事件
+        $('#exportBtn').click(function() {
+            const formData = new FormData($('#searchForm')[0]);
+
+            // 创建一个隐藏的表单用于导出
+            const exportForm = $('<form method="post" action="/admin/users/export"></form>');
+            formData.forEach((value, key) => {
+                if (value) {
+                    exportForm.append(`<input type="hidden" name="${key}" value="${value}">`);
+                }
+            });
+
+            $('body').append(exportForm);
+            exportForm.submit();
+            exportForm.remove();
+        });
+
         // 添加用户按钮点击事件
         $('#addUserBtn').click(function() {
             isEdit = false;
@@ -313,37 +624,6 @@
             $('#password').attr('required', true);
             $('#passwordHelp').hide();
             $('#userModal').modal('show');
-        });
-
-        // 编辑用户按钮点击事件
-        $('.edit-btn').click(function() {
-            const userId = $(this).data('id');
-            isEdit = true;
-            currentUserId = userId;
-            $('#userModalTitle').text('编辑用户');
-            $('#password').attr('required', false);
-            $('#passwordHelp').show();
-
-            // 获取用户信息
-            $.get('/admin/users/get/' + userId, function(response) {
-                if (response.success) {
-                    const user = response.data;
-                    $('#userId').val(user.id);
-                    $('#usern').val(user.usern);
-                    $('#password').val('');
-                    $('#email').val(user.email);
-                    $('#phone').val(user.phone);
-                    $('#realN').val(user.realN);
-                    $('#balance').val(user.balance);
-                    $('#role').val(user.role);
-                    $('#status').val(user.status);
-                    $('#userModal').modal('show');
-                } else {
-                    showAlert(response.message || '获取用户信息失败', 'danger');
-                }
-            }).fail(function() {
-                showAlert('请求失败，请重试', 'danger');
-            });
         });
 
         // 保存用户按钮点击事件
@@ -378,10 +658,8 @@
                     if (response.success) {
                         showAlert(response.message || '操作成功', 'success');
                         $('#userModal').modal('hide');
-                        // 刷新页面
-                        setTimeout(() => {
-                            location.reload();
-                        }, 1000);
+                        // 重新加载当前页数据
+                        loadUsers(currentPage);
                     } else {
                         showAlert(response.message || '操作失败', 'danger');
                     }
@@ -390,16 +668,6 @@
                     showAlert('请求失败，请重试', 'danger');
                 }
             });
-        });
-
-        // 删除用户按钮点击事件
-        $('.delete-btn').click(function() {
-            const userId = $(this).data('id');
-            const userName = $(this).data('name');
-
-            currentUserId = userId;
-            $('#deleteUserName').text(userName);
-            $('#deleteModal').modal('show');
         });
 
         // 确认删除按钮点击事件
@@ -413,10 +681,8 @@
                     if (response.success) {
                         showAlert(response.message || '删除成功', 'success');
                         $('#deleteModal').modal('hide');
-                        // 刷新页面
-                        setTimeout(() => {
-                            location.reload();
-                        }, 1000);
+                        // 重新加载当前页数据
+                        loadUsers(currentPage);
                     } else {
                         showAlert(response.message || '删除失败', 'danger');
                     }
@@ -434,6 +700,16 @@
             isEdit = false;
             currentUserId = null;
         });
+
+        // 回车键查询
+        $('#searchForm input').keypress(function(e) {
+            if (e.which === 13) {
+                $('#searchBtn').click();
+            }
+        });
+
+        // 初始化加载数据
+        bindTableEvents();
     });
 </script>
 </body>
