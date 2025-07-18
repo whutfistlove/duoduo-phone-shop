@@ -99,27 +99,20 @@
             <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
                 <h1 class="h2">客户管理</h1>
                 <div class="btn-toolbar mb-2 mb-md-0">
-                    <a href="/admin/users/add" class="btn btn-primary">
+                    <button class="btn btn-primary" id="addUserBtn">
                         <i class="fa fa-plus"></i> 添加用户
-                    </a>
+                    </button>
                 </div>
             </div>
 
             <!-- 提示信息 -->
-            <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
-                <span th:text="${success}"></span>
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-            <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
-                <span th:text="${error}"></span>
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
+            <div id="alertContainer"></div>
 
             <!-- 用户列表 -->
             <div class="card">
                 <div class="card-body">
                     <div class="table-responsive">
-                        <table class="table table-hover">
+                        <table class="table table-hover" id="userTable">
                             <thead>
                             <tr>
                                 <th>ID</th>
@@ -143,22 +136,22 @@
                                 <td th:text="${user.realN}">真实姓名</td>
                                 <td>￥<span th:text="${#numbers.formatDecimal(user.balance, 1, 2)}">0.00</span></td>
                                 <td>
-                                            <span class="badge"
-                                                  th:classappend="${user.role == 'ADMIN' ? 'role-admin' : 'role-user'}"
-                                                  th:text="${user.role}">USER</span>
+                                    <span class="badge"
+                                          th:classappend="${user.role == 'ADMIN' ? 'role-admin' : 'role-user'}"
+                                          th:text="${user.role}">USER</span>
                                 </td>
                                 <td>
-                                            <span th:classappend="${user.status == 1 ? 'status-active' : 'status-inactive'}">
-                                                <i class="fa" th:classappend="${user.status == 1 ? 'fa-check-circle' : 'fa-times-circle'}"></i>
-                                                <span th:text="${user.status == 1 ? '正常' : '禁用'}">正常</span>
-                                            </span>
+                                    <span th:classappend="${user.status == 1 ? 'status-active' : 'status-inactive'}">
+                                        <i class="fa" th:classappend="${user.status == 1 ? 'fa-check-circle' : 'fa-times-circle'}"></i>
+                                        <span th:text="${user.status == 1 ? '正常' : '禁用'}">正常</span>
+                                    </span>
                                 </td>
                                 <td th:text="${#dates.format(user.createTime, 'yyyy-MM-dd')}">2025-01-14</td>
                                 <td>
-                                    <a th:href="@{/admin/users/edit/{id}(id=${user.id})}"
-                                       class="btn btn-sm btn-primary">
+                                    <button class="btn btn-sm btn-primary edit-btn"
+                                            th:data-id="${user.id}">
                                         <i class="fa fa-edit"></i>
-                                    </a>
+                                    </button>
                                     <button class="btn btn-sm btn-danger delete-btn"
                                             th:data-id="${user.id}"
                                             th:data-name="${user.usern}">
@@ -179,6 +172,95 @@
     </div>
 </div>
 
+<!-- 添加/编辑用户模态框 -->
+<div class="modal fade" id="userModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="userModalTitle">添加用户</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="userForm">
+                    <input type="hidden" id="userId" name="id">
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="usern" class="form-label">用户名 <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="usern" name="usern" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="password" class="form-label">密码 <span class="text-danger">*</span></label>
+                                <input type="password" class="form-control" id="password" name="password" required>
+                                <div class="form-text" id="passwordHelp" style="display: none;">留空则不修改密码</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="email" class="form-label">邮箱 <span class="text-danger">*</span></label>
+                                <input type="email" class="form-control" id="email" name="email" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="phone" class="form-label">手机号</label>
+                                <input type="tel" class="form-control" id="phone" name="phone">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="realN" class="form-label">真实姓名</label>
+                                <input type="text" class="form-control" id="realN" name="realN">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="balance" class="form-label">余额</label>
+                                <input type="number" class="form-control" id="balance" name="balance"
+                                       value="0" min="0" step="0.01">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="role" class="form-label">角色</label>
+                                <select class="form-select" id="role" name="role">
+                                    <option value="USER">普通用户</option>
+                                    <option value="ADMIN">管理员</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="status" class="form-label">状态</label>
+                                <select class="form-select" id="status" name="status">
+                                    <option value="1">正常</option>
+                                    <option value="0">禁用</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-primary" id="saveUserBtn">保存</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- 删除确认模态框 -->
 <div class="modal fade" id="deleteModal" tabindex="-1">
     <div class="modal-dialog">
@@ -192,9 +274,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
-                <form id="deleteForm" method="post" style="display: inline;">
-                    <button type="submit" class="btn btn-danger">确认删除</button>
-                </form>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">确认删除</button>
             </div>
         </div>
     </div>
@@ -204,13 +284,155 @@
 <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
 <script>
     $(document).ready(function() {
+        let isEdit = false;
+        let currentUserId = null;
+
+        // 显示提示信息
+        function showAlert(message, type = 'success') {
+            const alertHtml = `
+            <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        `;
+            $('#alertContainer').html(alertHtml);
+
+            // 3秒后自动关闭提示
+            setTimeout(() => {
+                $('.alert').alert('close');
+            }, 3000);
+        }
+
+        // 添加用户按钮点击事件
+        $('#addUserBtn').click(function() {
+            isEdit = false;
+            currentUserId = null;
+            $('#userModalTitle').text('添加用户');
+            $('#userForm')[0].reset();
+            $('#userId').val('');
+            $('#password').attr('required', true);
+            $('#passwordHelp').hide();
+            $('#userModal').modal('show');
+        });
+
+        // 编辑用户按钮点击事件
+        $('.edit-btn').click(function() {
+            const userId = $(this).data('id');
+            isEdit = true;
+            currentUserId = userId;
+            $('#userModalTitle').text('编辑用户');
+            $('#password').attr('required', false);
+            $('#passwordHelp').show();
+
+            // 获取用户信息
+            $.get('/admin/users/get/' + userId, function(response) {
+                if (response.success) {
+                    const user = response.data;
+                    $('#userId').val(user.id);
+                    $('#usern').val(user.usern);
+                    $('#password').val('');
+                    $('#email').val(user.email);
+                    $('#phone').val(user.phone);
+                    $('#realN').val(user.realN);
+                    $('#balance').val(user.balance);
+                    $('#role').val(user.role);
+                    $('#status').val(user.status);
+                    $('#userModal').modal('show');
+                } else {
+                    showAlert(response.message || '获取用户信息失败', 'danger');
+                }
+            }).fail(function() {
+                showAlert('请求失败，请重试', 'danger');
+            });
+        });
+
+        // 保存用户按钮点击事件
+        $('#saveUserBtn').click(function() {
+            const formData = new FormData($('#userForm')[0]);
+
+            // 验证必填字段
+            if (!$('#usern').val().trim()) {
+                showAlert('用户名不能为空', 'danger');
+                return;
+            }
+
+            if (!$('#email').val().trim()) {
+                showAlert('邮箱不能为空', 'danger');
+                return;
+            }
+
+            if (!isEdit && !$('#password').val().trim()) {
+                showAlert('密码不能为空', 'danger');
+                return;
+            }
+
+            const url = isEdit ? '/admin/users/update' : '/admin/users/add';
+
+            $.ajax({
+                url: url,
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(response) {
+                    if (response.success) {
+                        showAlert(response.message || '操作成功', 'success');
+                        $('#userModal').modal('hide');
+                        // 刷新页面
+                        setTimeout(() => {
+                            location.reload();
+                        }, 1000);
+                    } else {
+                        showAlert(response.message || '操作失败', 'danger');
+                    }
+                },
+                error: function() {
+                    showAlert('请求失败，请重试', 'danger');
+                }
+            });
+        });
+
+        // 删除用户按钮点击事件
         $('.delete-btn').click(function() {
             const userId = $(this).data('id');
             const userName = $(this).data('name');
 
+            currentUserId = userId;
             $('#deleteUserName').text(userName);
-            $('#deleteForm').attr('action', '/admin/users/delete/' + userId);
             $('#deleteModal').modal('show');
+        });
+
+        // 确认删除按钮点击事件
+        $('#confirmDeleteBtn').click(function() {
+            if (!currentUserId) return;
+
+            $.ajax({
+                url: '/admin/users/delete/' + currentUserId,
+                type: 'POST',
+                success: function(response) {
+                    if (response.success) {
+                        showAlert(response.message || '删除成功', 'success');
+                        $('#deleteModal').modal('hide');
+                        // 刷新页面
+                        setTimeout(() => {
+                            location.reload();
+                        }, 1000);
+                    } else {
+                        showAlert(response.message || '删除失败', 'danger');
+                    }
+                },
+                error: function() {
+                    showAlert('请求失败，请重试', 'danger');
+                }
+            });
+        });
+
+        // 模态框关闭时重置表单
+        $('#userModal').on('hidden.bs.modal', function() {
+            $('#userForm')[0].reset();
+            $('#userId').val('');
+            isEdit = false;
+            currentUserId = null;
         });
     });
 </script>

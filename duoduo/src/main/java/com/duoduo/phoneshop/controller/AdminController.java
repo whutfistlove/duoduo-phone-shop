@@ -79,6 +79,8 @@ public class AdminController {
 
         List<User> users = userService.getAllUsers();
         model.addAttribute("users", users);
+        // 新增时用一个空对象
+        model.addAttribute("user", new User());
 
         return "admin/users";
     }
@@ -86,6 +88,7 @@ public class AdminController {
     /**
      * 添加用户页面
      */
+    @Deprecated
     @GetMapping("/users/add")
     public String addUserPage(HttpSession session) {
         User currentUser = (User) session.getAttribute("currentUser");
@@ -100,31 +103,89 @@ public class AdminController {
      * 添加用户
      */
     @PostMapping("/users/add")
-    public String addUser(@ModelAttribute User user,
-                          HttpSession session,
-                          RedirectAttributes redirectAttributes) {
+    @ResponseBody
+    public Map<String, Object> addUser(@RequestParam String usern,
+                                       @RequestParam String password,
+                                       @RequestParam String email,
+                                       @RequestParam String phone,
+                                       @RequestParam String realN,
+                                       @RequestParam(defaultValue = "0") BigDecimal balance,
+                                       @RequestParam(defaultValue = "USER") String role,
+                                       @RequestParam(defaultValue = "1") Integer status,
+                                       HttpSession session) {
+        Map<String, Object> result = new HashMap<>();
+
         User currentUser = (User) session.getAttribute("currentUser");
         if (currentUser == null || !"ADMIN".equals(currentUser.getRole())) {
-            return "redirect:/user/login";
+            result.put("success", false);
+            result.put("message", "无权限");
+            return result;
         }
 
         try {
+            User user = new User();
+            user.setUsern(usern);
+            user.setPassword(password);
+            user.setEmail(email);
+            user.setPhone(phone);
+            user.setRealN(realN);
+            user.setBalance(balance);
+            user.setRole(role);
+            user.setStatus(status);
+
             if (userService.register(user)) {
-                redirectAttributes.addFlashAttribute("success", "用户添加成功");
+                result.put("success", true);
+                result.put("message", "用户添加成功");
             } else {
-                redirectAttributes.addFlashAttribute("error", "用户名已存在");
+                result.put("success", false);
+                result.put("message", "用户名已存在");
             }
         } catch (Exception e) {
             log.error("添加用户失败", e);
-            redirectAttributes.addFlashAttribute("error", "添加失败，请重试");
+            result.put("success", false);
+            result.put("message", "添加失败，请重试");
         }
 
-        return "redirect:/admin/users";
+        return result;
+    }
+    /**
+     * 获取用户详情（用于编辑）- AJAX接口
+     */
+    @GetMapping("/users/get/{id}")
+    @ResponseBody
+    public Map<String, Object> getUser(@PathVariable Long id, HttpSession session) {
+        Map<String, Object> result = new HashMap<>();
+
+        User currentUser = (User) session.getAttribute("currentUser");
+        if (currentUser == null || !"ADMIN".equals(currentUser.getRole())) {
+            result.put("success", false);
+            result.put("message", "无权限");
+            return result;
+        }
+
+        try {
+            User user = userService.getUserById(id);
+            if (user == null) {
+                result.put("success", false);
+                result.put("message", "用户不存在");
+                return result;
+            }
+
+            result.put("success", true);
+            result.put("data", user);
+        } catch (Exception e) {
+            log.error("获取用户失败", e);
+            result.put("success", false);
+            result.put("message", "获取用户失败");
+        }
+
+        return result;
     }
 
     /**
      * 编辑用户页面
      */
+    @Deprecated
     @GetMapping("/users/edit/{id}")
     public String editUserPage(@PathVariable Long id, Model model, HttpSession session) {
         User currentUser = (User) session.getAttribute("currentUser");
@@ -133,63 +194,115 @@ public class AdminController {
         }
 
         User user = userService.getUserById(id);
+        List<User> users = userService.getAllUsers();
+        model.addAttribute("users", users);
+        // 编辑时塞入要回显的实体
         model.addAttribute("user", user);
 
-        return "admin/user-edit";
+        return "admin/users";
     }
 
     /**
      * 更新用户
      */
     @PostMapping("/users/update")
-    public String updateUser(@ModelAttribute User user,
-                             HttpSession session,
-                             RedirectAttributes redirectAttributes) {
+    @ResponseBody
+    public Map<String, Object> updateUser(@RequestParam Long id,
+                                          @RequestParam String usern,
+                                          @RequestParam(required = false) String password,
+                                          @RequestParam String email,
+                                          @RequestParam String phone,
+                                          @RequestParam String realN,
+                                          @RequestParam BigDecimal balance,
+                                          @RequestParam String role,
+                                          @RequestParam Integer status,
+                                          HttpSession session) {
+        Map<String, Object> result = new HashMap<>();
+
         User currentUser = (User) session.getAttribute("currentUser");
         if (currentUser == null || !"ADMIN".equals(currentUser.getRole())) {
-            return "redirect:/user/login";
+            result.put("success", false);
+            result.put("message", "无权限");
+            return result;
         }
 
         try {
+            // 验证用户ID不为空
+            if (id == null) {
+                result.put("success", false);
+                result.put("message", "更新失败：用户ID不能为空");
+                return result;
+            }
+
+            // 验证用户是否存在
+            User existingUser = userService.getUserById(id);
+            if (existingUser == null) {
+                result.put("success", false);
+                result.put("message", "更新失败：用户不存在");
+                return result;
+            }
+
+            User user = new User();
+            user.setId(id);
+            user.setUsern(usern);
+            // 如果密码为空，则不更新密码
+            if (password != null && !password.trim().isEmpty()) {
+                user.setPassword(password);
+            }
+            user.setEmail(email);
+            user.setPhone(phone);
+            user.setRealN(realN);
+            user.setBalance(balance);
+            user.setRole(role);
+            user.setStatus(status);
+
             if (userService.updateUser(user)) {
-                redirectAttributes.addFlashAttribute("success", "用户更新成功");
+                result.put("success", true);
+                result.put("message", "用户更新成功");
             } else {
-                redirectAttributes.addFlashAttribute("error", "更新失败");
+                result.put("success", false);
+                result.put("message", "更新失败");
             }
         } catch (Exception e) {
             log.error("更新用户失败", e);
-            redirectAttributes.addFlashAttribute("error", "更新失败，请重试");
+            result.put("success", false);
+            result.put("message", "更新失败，请重试");
         }
 
-        return "redirect:/admin/users";
+        return result;
     }
 
     /**
      * 删除用户
      */
     @PostMapping("/users/delete/{id}")
-    public String deleteUser(@PathVariable Long id,
-                             HttpSession session,
-                             RedirectAttributes redirectAttributes) {
+    @ResponseBody
+    public Map<String, Object> deleteUser(@PathVariable Long id, HttpSession session) {
+        Map<String, Object> result = new HashMap<>();
+
         User currentUser = (User) session.getAttribute("currentUser");
         if (currentUser == null || !"ADMIN".equals(currentUser.getRole())) {
-            return "redirect:/user/login";
+            result.put("success", false);
+            result.put("message", "无权限");
+            return result;
         }
 
         try {
             if (userService.deleteUser(id)) {
-                redirectAttributes.addFlashAttribute("success", "用户删除成功");
+                result.put("success", true);
+                result.put("message", "用户删除成功");
             } else {
-                redirectAttributes.addFlashAttribute("error", "删除失败");
+                result.put("success", false);
+                result.put("message", "删除失败");
             }
         } catch (Exception e) {
             log.error("删除用户失败", e);
-            redirectAttributes.addFlashAttribute("error", "删除失败，请重试");
+            result.put("success", false);
+            result.put("message", "删除失败，请重试");
         }
 
-        return "redirect:/admin/users";
+        return result;
     }
-
     /**
      * 商品管理页面
      */
