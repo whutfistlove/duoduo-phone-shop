@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>收货地址 - 多多手机商城</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <style>
+        .user-sidebar {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+        }
+        .user-sidebar .nav-link {
+            color: #333;
+            padding: 10px 15px;
+            margin-bottom: 5px;
+            border-radius: 5px;
+        }
+        .user-sidebar .nav-link:hover {
+            background-color: #e9ecef;
+        }
+        .user-sidebar .nav-link.active {
+            background-color: #007bff;
+            color: white;
+        }
+        .address-card {
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        .address-card:hover {
+            border-color: #007bff;
+            box-shadow: 0 4px 12px rgba(0, 123, 255, 0.15);
+        }
+        .address-card.default {
+            border-color: #28a745;
+            background-color: #f8fff9;
+        }
+        .default-badge {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background-color: #28a745;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+        }
+        .address-actions {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #e9ecef;
+        }
+        .add-address-card {
+            border: 2px dashed #007bff;
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background-color: #f8f9ff;
+            margin-bottom: 15px;
+        }
+        .add-address-card:hover {
+            background-color: #e8efff;
+            border-color: #0056b3;
+        }
+        .search-box {
+            position: relative;
+            margin-bottom: 20px;
+        }
+        .search-box input {
+            padding-left: 40px;
+            border-radius: 25px;
+        }
+        .search-box .fa-search {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #6c757d;
+        }
+        .no-results {
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
+        }
+        .address-info {
+            line-height: 1.8;
+        }
+        .address-tips {
+            background-color: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+        /* 模态框样式 */
+        .modal-header {
+            background-color: #007bff;
+            color: white;
+        }
+        .modal-header .btn-close {
+            filter: brightness(0) invert(1);
+        }
+    </style>
+</head>
+<body>
+<!-- 导航栏 -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <div class="container">
+        <a class="navbar-brand" href="/">多多手机商城</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav me-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="/">首页</a>
+                </li>
+            </ul>
+            <ul class="navbar-nav">
+                <li class="nav-item">
+                    <a class="nav-link" href="/cart">
+                        <i class="fa fa-shopping-cart"></i> 购物车
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/favorite">
+                        <i class="fa fa-heart"></i> 收藏
+                    </a>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle active" href="#" role="button" data-bs-toggle="dropdown">
+                        <i class="fa fa-user"></i> <span th:text="${session.currentUser.usern}">用户</span>
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="/user/profile">个人中心</a></li>
+                        <li><a class="dropdown-item" href="/order/list">我的订单</a></li>
+                        <li><a class="dropdown-item" href="/address">收货地址</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="/user/logout">退出登录</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<div class="container mt-4">
+    <div class="row">
+        <!-- 侧边栏 -->
+        <div class="col-md-3">
+            <div class="user-sidebar">
+                <h5 class="mb-3">个人中心</h5>
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/user/profile">
+                            <i class="fa fa-user"></i> 基本信息
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/order/list">
+                            <i class="fa fa-list"></i> 我的订单
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/address">
+                            <i class="fa fa-map-marker"></i> 收货地址
+                        </a>
+                    </li>
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" href="/favorite">-->
+<!--                            <i class="fa fa-heart"></i> 我的收藏-->
+<!--                        </a>-->
+<!--                    </li>-->
+                    <li class="nav-item">
+                        <a class="nav-link" href="/user/recharge">
+                            <i class="fa fa-credit-card"></i> 账户充值
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- 主内容 -->
+        <div class="col-md-9">
+            <!-- 提示信息 -->
+            <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+                <span th:text="${success}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                <span th:text="${error}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+
+            <!-- 地址管理卡片 -->
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fa fa-map-marker"></i> 收货地址管理</h5>
+                    <span class="badge bg-primary" th:text="'共 ' + ${addresses.size()} + ' 个地址'">共 0 个地址</span>
+                </div>
+                <div class="card-body">
+                    <!-- 提示信息 -->
+                    <div class="address-tips">
+                        <i class="fa fa-info-circle"></i>
+                        <strong>温馨提示：</strong>最多可添加10个收货地址，请确保地址信息准确无误，以便商品能够及时送达。
+                    </div>
+
+                    <!-- 搜索框 -->
+                    <div class="search-box">
+                        <i class="fa fa-search"></i>
+                        <input type="text" class="form-control" id="searchAddress"
+                               placeholder="搜索收货人姓名、电话或地址...">
+                    </div>
+
+                    <!-- 地址列表 -->
+                    <div id="addressList">
+                        <!-- 添加新地址卡片 -->
+                        <div class="add-address-card" th:if="${addresses.size() < 10}"
+                             onclick="showAddModal()">
+                            <i class="fa fa-plus-circle fa-3x text-primary mb-3"></i>
+                            <h6>添加新地址</h6>
+                            <p class="text-muted mb-0">最多可添加10个收货地址</p>
+                        </div>
+
+                        <!-- 地址列表 -->
+                        <div th:each="addr : ${addresses}" class="address-card" th:classappend="${addr.isDefault == 1} ? 'default' : ''"
+                             th:data-search="${(addr.receiverN ?: '') + ' ' + (addr.receiverPhone ?: '') + ' ' + (addr.province ?: '') + ' ' + (addr.city ?: '') + ' ' + (addr.district ?: '') + ' ' + (addr.detailAddress ?: '')}">
+                            <div th:if="${addr.isDefault == 1}" class="default-badge">
+                                <i class="fa fa-check-circle"></i> 默认地址
+                            </div>
+
+                            <div class="address-info">
+                                <h6 class="mb-2">
+                                    <i class="fa fa-user"></i>
+                                    <strong th:text="${addr.receiverN}">收货人</strong>
+                                    <span class="ms-3">
+                                        <i class="fa fa-phone"></i>
+                                        <span th:text="${addr.receiverPhone}">手机号</span>
+                                    </span>
+                                </h6>
+                                <p class="mb-0 text-muted">
+                                    <i class="fa fa-map-marker"></i>
+                                    <span th:text="${addr.fullAddress}">详细地址</span>
+                                </p>
+                            </div>
+
+                            <div class="address-actions">
+                                <button type="button" class="btn btn-sm btn-primary"
+                                        th:onclick="'editAddress(' + ${addr.id} + ')'">
+                                    <i class="fa fa-edit"></i> 编辑
+                                </button>
+                                <button type="button" class="btn btn-sm btn-danger"
+                                        th:onclick="'deleteAddress(' + ${addr.id} + ')'">
+                                    <i class="fa fa-trash"></i> 删除
+                                </button>
+                                <button th:if="${addr.isDefault != 1}" type="button"
+                                        class="btn btn-sm btn-success"
+                                        th:onclick="'setDefault(' + ${addr.id} + ')'">
+                                    <i class="fa fa-star"></i> 设为默认
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- 无搜索结果提示 -->
+                        <div id="noResults" class="no-results" style="display: none;">
+                            <i class="fa fa-search fa-3x text-muted mb-3"></i>
+                            <p>没有找到匹配的地址</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 地址编辑模态框 -->
+<div class="modal fade" id="addressModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fa fa-map-marker"></i>
+                    <span id="modalTitle">添加收货地址</span>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="addressForm" action="/address/add" method="post">
+                <div class="modal-body">
+                    <input type="hidden" name="id" id="addressId">
+
+                    <div class="mb-3">
+                        <label for="receiverN" class="form-label">收货人姓名 <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="receiverN" name="receiverN" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="receiverPhone" class="form-label">手机号码 <span class="text-danger">*</span></label>
+                        <input type="tel" class="form-control" id="receiverPhone" name="receiverPhone"
+                               pattern="^1[3-9]\d{9}$" required>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label for="province" class="form-label">省份 <span class="text-danger">*</span></label>
+                            <select class="form-select" id="province" name="province" required>
+                                <option value="">请选择省份</option>
+                                <option value="北京市">北京市</option>
+                                <option value="上海市">上海市</option>
+                                <option value="广东省">广东省</option>
+                                <option value="江苏省">江苏省</option>
+                                <option value="浙江省">浙江省</option>
+                                <option value="四川省">四川省</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="city" class="form-label">城市 <span class="text-danger">*</span></label>
+                            <select class="form-select" id="city" name="city" required>
+                                <option value="">请选择城市</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="district" class="form-label">区县 <span class="text-danger">*</span></label>
+                            <select class="form-select" id="district" name="district" required>
+                                <option value="">请选择区县</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="detailAddress" class="form-label">详细地址 <span class="text-danger">*</span></label>
+                        <textarea class="form-control" id="detailAddress" name="detailAddress"
+                                  rows="2" required></textarea>
+                    </div>
+
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="isDefaultCheckbox">
+                        <label class="form-check-label" for="isDefaultCheckbox">
+                            设为默认地址
+                        </label>
+                    </div>
+                    <!-- 隐藏字段确保isDefault总有值 -->
+                    <input type="hidden" id="isDefault" name="isDefault" value="0">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fa fa-save"></i> 保存地址
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
+<script>
+    $(document).ready(function() {
+        // 城市数据
+        const cityData = {
+            '北京市': {
+                '北京市': ['东城区', '西城区', '朝阳区', '丰台区', '石景山区', '海淀区', '门头沟区', '房山区', '通州区', '顺义区', '昌平区', '大兴区', '怀柔区', '平谷区', '密云区', '延庆区']
+            },
+            '上海市': {
+                '上海市': ['黄浦区', '徐汇区', '长宁区', '静安区', '普陀区', '虹口区', '杨浦区', '闵行区', '宝山区', '嘉定区', '浦东新区', '金山区', '松江区', '青浦区', '奉贤区', '崇明区']
+            },
+            '广东省': {
+                '广州市': ['越秀区', '海珠区', '荔湾区', '天河区', '白云区', '黄埔区', '番禺区', '花都区', '南沙区', '从化区', '增城区'],
+                '深圳市': ['罗湖区', '福田区', '南山区', '宝安区', '龙岗区', '盐田区', '龙华区', '坪山区', '光明区'],
+                '东莞市': ['莞城街道', '东城街道', '南城街道', '万江街道', '石碣镇', '石龙镇', '茶山镇', '石排镇']
+            },
+            '江苏省': {
+                '南京市': ['玄武区', '秦淮区', '建邺区', '鼓楼区', '浦口区', '栖霞区', '雨花台区', '江宁区', '六合区', '溧水区', '高淳区'],
+                '苏州市': ['姑苏区', '虎丘区', '吴中区', '相城区', '吴江区', '工业园区', '高新区']
+            },
+            '浙江省': {
+                '杭州市': ['上城区', '下城区', '江干区', '拱墅区', '西湖区', '滨江区', '萧山区', '余杭区', '临平区', '富阳区', '临安区'],
+                '宁波市': ['海曙区', '江北区', '北仑区', '镇海区', '鄞州区', '奉化区']
+            },
+            '四川省': {
+                '成都市': ['锦江区', '青羊区', '金牛区', '武侯区', '成华区', '龙泉驿区', '青白江区', '新都区', '温江区'],
+                '绵阳市': ['涪城区', '游仙区', '安州区', '江油市']
+            }
+        };
+
+        // 省份改变时更新城市
+        $('#province').change(function() {
+            const province = $(this).val();
+            const citySelect = $('#city');
+            const districtSelect = $('#district');
+
+            // 清空城市和区县
+            citySelect.html('<option value="">请选择城市</option>');
+            districtSelect.html('<option value="">请选择区县</option>');
+
+            if (province && cityData[province]) {
+                // 添加城市选项
+                Object.keys(cityData[province]).forEach(city => {
+                    citySelect.append(`<option value="${city}">${city}</option>`);
+                });
+            }
+        });
+
+        // 城市改变时更新区县
+        $('#city').change(function() {
+            const province = $('#province').val();
+            const city = $(this).val();
+            const districtSelect = $('#district');
+
+            // 清空区县
+            districtSelect.html('<option value="">请选择区县</option>');
+
+            if (province && city && cityData[province] && cityData[province][city]) {
+                // 添加区县选项
+                cityData[province][city].forEach(district => {
+                    districtSelect.append(`<option value="${district}">${district}</option>`);
+                });
+            }
+        });
+
+        // 搜索功能
+        $('#searchAddress').on('input', function() {
+            const searchTerm = $(this).val().toLowerCase();
+            let hasResults = false;
+
+            $('.address-card').each(function() {
+                const searchData = $(this).data('search');
+                if (searchData && searchData.toLowerCase().includes(searchTerm)) {
+                    $(this).show();
+                    hasResults = true;
+                } else {
+                    $(this).hide();
+                }
+            });
+
+            // 显示/隐藏无结果提示
+            if (!hasResults && searchTerm.length > 0) {
+                $('#noResults').show();
+            } else {
+                $('#noResults').hide();
+            }
+
+            // 搜索时隐藏添加按钮
+            if (searchTerm.length > 0) {
+                $('.add-address-card').hide();
+            } else {
+                $('.add-address-card').show();
+            }
+        });
+
+        // 显示添加地址模态框
+        window.showAddModal = function() {
+            $('#modalTitle').text('添加收货地址');
+            $('#addressForm').attr('action', '/address/add');
+            $('#addressForm')[0].reset();
+            $('#addressId').val('');
+            $('#isDefault').val('0');
+            $('#isDefaultCheckbox').prop('checked', false);
+            $('#city').html('<option value="">请选择城市</option>');
+            $('#district').html('<option value="">请选择区县</option>');
+            $('#addressModal').modal('show');
+        };
+
+        // 编辑地址
+        window.editAddress = function(id) {
+            $('#modalTitle').text('编辑收货地址');
+
+            // 通过AJAX获取地址详情
+            $.ajax({
+                url: '/address/get/' + id,
+                type: 'GET',
+                success: function(result) {
+                    if (result.success) {
+                        const addr = result.data;
+
+                        // 填充表单数据
+                        $('#addressId').val(addr.id);
+                        $('#receiverN').val(addr.receiverN);
+                        $('#receiverPhone').val(addr.receiverPhone);
+                        $('#province').val(addr.province);
+                        $('#detailAddress').val(addr.detailAddress);
+
+                        // 设置默认地址复选框
+                        $('#isDefaultCheckbox').prop('checked', addr.isDefault === 1);
+                        $('#isDefault').val(addr.isDefault);
+
+                        // 修改表单action为更新
+                        $('#addressForm').attr('action', '/address/update');
+
+                        // 触发省份改变事件，加载城市
+                        $('#province').trigger('change');
+
+                        // 延迟设置城市和区县的值
+                        setTimeout(() => {
+                            $('#city').val(addr.city);
+                            $('#city').trigger('change');
+
+                            setTimeout(() => {
+                                $('#district').val(addr.district);
+                            }, 100);
+                        }, 100);
+
+                        // 显示模态框
+                        $('#addressModal').modal('show');
+                    } else {
+                        alert(result.message || '获取地址信息失败');
+                    }
+                },
+                error: function() {
+                    alert('获取地址信息失败，请重试');
+                }
+            });
+        };
+
+        // 删除地址
+        window.deleteAddress = function(id) {
+            if (confirm('确定要删除这个地址吗？')) {
+                $.ajax({
+                    url: '/address/delete/' + id,
+                    type: 'POST',
+                    success: function(result) {
+                        if (result.success) {
+                            alert(result.message);
+                            location.reload();
+                        } else {
+                            alert(result.message || '删除失败');
+                        }
+                    },
+                    error: function() {
+                        alert('操作失败，请重试');
+                    }
+                });
+            }
+        };
+
+        // 设为默认地址
+        window.setDefault = function(id) {
+            $.ajax({
+                url: '/address/setDefault/' + id,
+                type: 'POST',
+                success: function(result) {
+                    if (result.success) {
+                        alert(result.message);
+                        location.reload();
+                    } else {
+                        alert(result.message || '设置失败');
+                    }
+                },
+                error: function() {
+                    alert('操作失败，请重试');
+                }
+            });
+        };
+
+        // 模态框关闭时重置表单
+        $('#addressModal').on('hidden.bs.modal', function() {
+            $('#addressForm')[0].reset();
+            $('#modalTitle').text('添加收货地址');
+            $('#addressForm').attr('action', '/address/add');
+            $('#addressId').val(''); // 清空ID
+            $('#isDefault').val('0'); // 重置默认值
+            $('#isDefaultCheckbox').prop('checked', false);
+            // 重置下拉框
+            $('#city').html('<option value="">请选择城市</option>');
+            $('#district').html('<option value="">请选择区县</option>');
+        });
+
+        // 表单验证
+        $('#addressForm').submit(function(e) {
+            const phone = $('#receiverPhone').val();
+            if (!/^1[3-9]\d{9}$/.test(phone)) {
+                e.preventDefault();
+                alert('请输入正确的手机号码');
+                return false;
+            }
+
+            // 处理默认地址复选框
+            if ($('#isDefaultCheckbox').is(':checked')) {
+                $('#isDefault').val('1');
+            } else {
+                $('#isDefault').val('0');
+            }
+
+            return true;
+        });
+    });
+</script>
+</body>
+</html>
