@@ -47,6 +47,9 @@
         .search-form .btn {
             border-radius: 5px;
         }
+        .search-wrapper {
+            max-width: 600px;
+        }
     </style>
 </head>
 <body>
@@ -120,83 +123,25 @@
             <!-- 提示信息 -->
             <div id="alertContainer"></div>
 
-            <!-- 查询表单 -->
+            <!-- 简化的查询表单 -->
             <div class="search-form">
                 <form id="searchForm">
-                    <div class="row">
-                        <div class="col-md-3">
-                            <div class="mb-3">
-                                <label for="searchUsern" class="form-label">用户名</label>
-                                <input type="text" class="form-control" id="searchUsern" name="usern" placeholder="输入用户名">
-                            </div>
+                    <div class="search-wrapper">
+                        <label for="searchKeyword" class="form-label">搜索用户</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="searchKeyword" name="keyword"
+                                   placeholder="输入用户名、邮箱、手机号或真实姓名进行搜索...">
+                            <button type="button" class="btn btn-primary" id="searchBtn">
+                                <i class="fa fa-search"></i> 搜索
+                            </button>
+                            <button type="button" class="btn btn-secondary" id="resetBtn">
+                                <i class="fa fa-refresh"></i> 重置
+                            </button>
+                            <button type="button" class="btn btn-success" id="exportBtn">
+                                <i class="fa fa-download"></i> 导出
+                            </button>
                         </div>
-                        <div class="col-md-3">
-                            <div class="mb-3">
-                                <label for="searchEmail" class="form-label">邮箱</label>
-                                <input type="email" class="form-control" id="searchEmail" name="email" placeholder="输入邮箱">
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="mb-3">
-                                <label for="searchPhone" class="form-label">手机号</label>
-                                <input type="tel" class="form-control" id="searchPhone" name="phone" placeholder="输入手机号">
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="mb-3">
-                                <label for="searchRealN" class="form-label">真实姓名</label>
-                                <input type="text" class="form-control" id="searchRealN" name="realN" placeholder="输入真实姓名">
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-3">
-                            <div class="mb-3">
-                                <label for="searchRole" class="form-label">角色</label>
-                                <select class="form-select" id="searchRole" name="role">
-                                    <option value="">全部</option>
-                                    <option value="USER">普通用户</option>
-                                    <option value="ADMIN">管理员</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="mb-3">
-                                <label for="searchStatus" class="form-label">状态</label>
-                                <select class="form-select" id="searchStatus" name="status">
-                                    <option value="">全部</option>
-                                    <option value="1">正常</option>
-                                    <option value="0">禁用</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="mb-3">
-                                <label for="searchStartDate" class="form-label">注册开始日期</label>
-                                <input type="date" class="form-control" id="searchStartDate" name="startDate">
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="mb-3">
-                                <label for="searchEndDate" class="form-label">注册结束日期</label>
-                                <input type="date" class="form-control" id="searchEndDate" name="endDate">
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-12">
-                            <div class="d-flex gap-2">
-                                <button type="button" class="btn btn-primary" id="searchBtn">
-                                    <i class="fa fa-search"></i> 查询
-                                </button>
-                                <button type="button" class="btn btn-secondary" id="resetBtn">
-                                    <i class="fa fa-refresh"></i> 重置
-                                </button>
-                                <button type="button" class="btn btn-success" id="exportBtn">
-                                    <i class="fa fa-download"></i> 导出
-                                </button>
-                            </div>
-                        </div>
+                        <div class="form-text">支持模糊搜索，可以输入部分关键字进行查询</div>
                     </div>
                 </form>
             </div>
@@ -420,16 +365,18 @@
         // 加载用户数据
         function loadUsers(page = 1) {
             currentPage = page;
-            const formData = new FormData($('#searchForm')[0]);
-            formData.append('page', page);
-            formData.append('size', pageSize);
+            const keyword = $('#searchKeyword').val().trim();
+
+            const requestData = {
+                keyword: keyword,
+                page: page,
+                size: pageSize
+            };
 
             $.ajax({
                 url: '/admin/users/search',
                 type: 'POST',
-                data: formData,
-                processData: false,
-                contentType: false,
+                data: requestData,
                 success: function(response) {
                     if (response.success) {
                         updateUserTable(response.data.users);
@@ -586,28 +533,26 @@
             });
         }
 
-        // 查询按钮点击事件
+        // 搜索按钮点击事件
         $('#searchBtn').click(function() {
             loadUsers(1);
         });
 
         // 重置按钮点击事件
         $('#resetBtn').click(function() {
-            $('#searchForm')[0].reset();
+            $('#searchKeyword').val('');
             loadUsers(1);
         });
 
         // 导出按钮点击事件
         $('#exportBtn').click(function() {
-            const formData = new FormData($('#searchForm')[0]);
+            const keyword = $('#searchKeyword').val().trim();
 
             // 创建一个隐藏的表单用于导出
             const exportForm = $('<form method="post" action="/admin/users/export"></form>');
-            formData.forEach((value, key) => {
-                if (value) {
-                    exportForm.append(`<input type="hidden" name="${key}" value="${value}">`);
-                }
-            });
+            if (keyword) {
+                exportForm.append(`<input type="hidden" name="keyword" value="${keyword}">`);
+            }
 
             $('body').append(exportForm);
             exportForm.submit();
@@ -701,15 +646,17 @@
             currentUserId = null;
         });
 
-        // 回车键查询
-        $('#searchForm input').keypress(function(e) {
+        // 回车键搜索
+        $('#searchKeyword').keypress(function(e) {
             if (e.which === 13) {
+                e.preventDefault();
                 $('#searchBtn').click();
             }
         });
 
         // 初始化加载数据
         bindTableEvents();
+        loadUsers(1);
     });
 </script>
 </body>

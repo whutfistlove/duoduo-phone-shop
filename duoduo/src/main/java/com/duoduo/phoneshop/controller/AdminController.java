@@ -17,7 +17,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-
+import javax.servlet.http.HttpServletResponse;
+import java.io.PrintWriter;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
 /**
  * 管理员控制器
  *
@@ -40,7 +44,114 @@ public class AdminController {
 
     @Autowired
     private OrderService orderService;
+    /**
+     * 搜索用户 - AJAX接口
+     */
+    @PostMapping("/users/search")
+    @ResponseBody
+    public Map<String, Object> searchUsers(@RequestParam(required = false) String keyword,
+                                           @RequestParam(defaultValue = "1") Integer page,
+                                           @RequestParam(defaultValue = "10") Integer size,
+                                           HttpSession session) {
+        Map<String, Object> result = new HashMap<>();
 
+        User currentUser = (User) session.getAttribute("currentUser");
+        if (currentUser == null || !"ADMIN".equals(currentUser.getRole())) {
+            result.put("success", false);
+            result.put("message", "无权限");
+            return result;
+        }
+
+        try {
+            List<User> allUsers;
+
+            // 如果有搜索关键字，进行过滤
+            if (keyword != null && !keyword.trim().isEmpty()) {
+                allUsers = userService.searchUsers(keyword.trim());
+            } else {
+                allUsers = userService.getAllUsers();
+            }
+
+            // 计算分页
+            int totalCount = allUsers.size();
+            int totalPages = (int) Math.ceil((double) totalCount / size);
+            int startIndex = (page - 1) * size;
+            int endIndex = Math.min(startIndex + size, totalCount);
+
+            List<User> pagedUsers;
+            if (startIndex < totalCount) {
+                pagedUsers = allUsers.subList(startIndex, endIndex);
+            } else {
+                pagedUsers = new ArrayList<>();
+            }
+
+            Map<String, Object> data = new HashMap<>();
+            data.put("users", pagedUsers);
+            data.put("totalCount", totalCount);
+            data.put("totalPages", totalPages);
+            data.put("currentPage", page);
+
+            result.put("success", true);
+            result.put("data", data);
+        } catch (Exception e) {
+            log.error("搜索用户失败", e);
+            result.put("success", false);
+            result.put("message", "查询失败，请重试");
+        }
+
+        return result;
+    }
+
+    /**
+     * 导出用户数据
+     */
+    @PostMapping("/users/export")
+    public void exportUsers(@RequestParam(required = false) String keyword,
+                            HttpServletResponse response,
+                            HttpSession session) {
+        User currentUser = (User) session.getAttribute("currentUser");
+        if (currentUser == null || !"ADMIN".equals(currentUser.getRole())) {
+            return;
+        }
+
+        try {
+            List<User> users;
+
+            if (keyword != null && !keyword.trim().isEmpty()) {
+                users = userService.searchUsers(keyword.trim());
+            } else {
+                users = userService.getAllUsers();
+            }
+
+            // 设置响应头
+            response.setContentType("application/vnd.ms-excel");
+            response.setCharacterEncoding("utf-8");
+            response.setHeader("Content-Disposition", "attachment;filename=users_" +
+                    new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date()) + ".csv");
+
+            // 输出CSV
+            PrintWriter writer = response.getWriter();
+            writer.println("ID,用户名,邮箱,手机号,真实姓名,余额,角色,状态,注册时间");
+
+            for (User user : users) {
+                writer.printf("%d,%s,%s,%s,%s,%.2f,%s,%s,%s%n",
+                        user.getId(),
+                        user.getUsern(),
+                        user.getEmail(),
+                        user.getPhone() != null ? user.getPhone() : "",
+                        user.getRealN() != null ? user.getRealN() : "",
+                        user.getBalance(),
+                        user.getRole(),
+                        user.getStatus() == 1 ? "正常" : "禁用",
+                        new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(user.getCreateTime())
+                );
+            }
+
+            writer.flush();
+        } catch (Exception e) {
+            log.error("导出用户数据失败", e);
+        }
+    }
     /**
      * 管理员仪表板
      */
@@ -306,14 +417,28 @@ public class AdminController {
     /**
      * 商品管理页面
      */
+    /**
+     * 商品管理页面（支持搜索）
+     */
     @GetMapping("/products")
-    public String productList(Model model, HttpSession session) {
+    public String productList(@RequestParam(required = false) String keyword,
+                              Model model,
+                              HttpSession session) {
         User currentUser = (User) session.getAttribute("currentUser");
         if (currentUser == null || !"ADMIN".equals(currentUser.getRole())) {
             return "redirect:/user/login";
         }
 
-        List<Product> products = productService.getAllProducts();
+        List<Product> products;
+
+        // 如果有搜索关键字，进行搜索
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            products = productService.searchProducts(keyword.trim());
+            model.addAttribute("keyword", keyword);
+        } else {
+            products = productService.getAllProducts();
+        }
+
         model.addAttribute("products", products);
 
         return "admin/products";

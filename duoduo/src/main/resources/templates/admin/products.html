@@ -38,6 +38,9 @@
         .stock-out {
             color: #dc3545;
         }
+        .search-box {
+            max-width: 400px;
+        }
     </style>
 </head>
 <body>
@@ -118,6 +121,25 @@
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
 
+            <!-- 搜索框 -->
+            <div class="card mb-3">
+                <div class="card-body">
+                    <form action="/admin/products" method="get" class="d-flex align-items-center">
+                        <div class="input-group search-box me-2">
+                            <input type="text" class="form-control" name="keyword"
+                                   th:value="${param.keyword}"
+                                   placeholder="请输入商品名称、品牌或型号...">
+                            <button class="btn btn-primary" type="submit">
+                                <i class="fa fa-search"></i> 搜索
+                            </button>
+                        </div>
+                        <a href="/admin/products" class="btn btn-secondary">
+                            <i class="fa fa-refresh"></i> 重置
+                        </a>
+                    </form>
+                </div>
+            </div>
+
             <!-- 商品列表 -->
             <div class="card">
                 <div class="card-body">
@@ -151,17 +173,17 @@
                                 <td th:text="${product.categoryN}">分类</td>
                                 <td>￥<span th:text="${#numbers.formatDecimal(product.price, 1, 2)}">0.00</span></td>
                                 <td>
-                                            <span th:classappend="${product.stock == 0 ? 'stock-out' : (product.stock < 10 ? 'stock-low' : '')}">
-                                                <span th:text="${product.stock}">0</span>
-                                                <span th:if="${product.stock == 0}"> (已售罄)</span>
-                                                <span th:if="${product.stock > 0 && product.stock < 10}"> (库存紧张)</span>
-                                            </span>
+                                    <span th:classappend="${product.stock == 0 ? 'stock-out' : (product.stock < 10 ? 'stock-low' : '')}">
+                                        <span th:text="${product.stock}">0</span>
+                                        <span th:if="${product.stock == 0}"> (已售罄)</span>
+                                        <span th:if="${product.stock > 0 && product.stock < 10}"> (库存紧张)</span>
+                                    </span>
                                 </td>
                                 <td>
-                                            <span th:classappend="${product.status == 1 ? 'status-active' : 'status-inactive'}">
-                                                <i class="fa" th:classappend="${product.status == 1 ? 'fa-check-circle' : 'fa-times-circle'}"></i>
-                                                <span th:text="${product.status == 1 ? '上架' : '下架'}">上架</span>
-                                            </span>
+                                    <span th:classappend="${product.status == 1 ? 'status-active' : 'status-inactive'}">
+                                        <i class="fa" th:classappend="${product.status == 1 ? 'fa-check-circle' : 'fa-times-circle'}"></i>
+                                        <span th:text="${product.status == 1 ? '上架' : '下架'}">上架</span>
+                                    </span>
                                 </td>
                                 <td th:text="${#dates.format(product.createTime, 'yyyy-MM-dd')}">2025-01-14</td>
                                 <td>
@@ -182,7 +204,10 @@
                     </div>
 
                     <div th:if="${products.isEmpty()}" class="text-center py-4">
-                        <p class="text-muted">暂无商品数据</p>
+                        <p class="text-muted">
+                            <span th:if="${param.keyword}">未找到匹配的商品</span>
+                            <span th:unless="${param.keyword}">暂无商品数据</span>
+                        </p>
                     </div>
                 </div>
             </div>

@@ -17,7 +17,22 @@
         <result column="updateTime" property="updateTime" jdbcType="TIMESTAMP"/>
     </resultMap>
 
-    <resultMap id="OrderDetailMap" type="com.duoduo.phoneshop.entity.Order" extends="BaseResultMap">
+    <!-- 包含订单项的结果映射 -->
+    <resultMap id="OrderWithItemsMap" type="com.duoduo.phoneshop.entity.Order" extends="BaseResultMap">
+        <collection property="orderItems" ofType="com.duoduo.phoneshop.entity.OrderItem">
+            <id column="oi_id" property="id"/>
+            <result column="oi_orderId" property="orderId"/>
+            <result column="oi_productId" property="productId"/>
+            <result column="oi_productN" property="productName"/>
+            <result column="oi_productImage" property="productImage"/>
+            <result column="oi_price" property="price"/>
+            <result column="oi_quantity" property="quantity"/>
+            <result column="oi_totalAmount" property="totalAmount"/>
+            <result column="oi_createTime" property="createTime"/>
+        </collection>
+    </resultMap>
+
+    <resultMap id="OrderDetailMap" type="com.duoduo.phoneshop.entity.Order" extends="OrderWithItemsMap">
         <association property="user" javaType="com.duoduo.phoneshop.entity.User">
             <id column="u_id" property="id"/>
             <result column="u_usern" property="usern"/>
@@ -56,18 +71,31 @@
                a.id as a_id, a.receiverN as a_receiverN,
                a.receiverPhone as a_receiverPhone, a.province as a_province,
                a.city as a_city, a.district as a_district,
-               a.detailAddress as a_detailAddress
+               a.detailAddress as a_detailAddress,
+               oi.id as oi_id, oi.orderId as oi_orderId, oi.productId as oi_productId,
+               oi.productN as oi_productN, oi.productImage as oi_productImage,
+               oi.price as oi_price, oi.quantity as oi_quantity,
+               oi.totalAmount as oi_totalAmount, oi.createTime as oi_createTime
         FROM `order` o
                  LEFT JOIN user u ON o.userId = u.id
                  LEFT JOIN address a ON o.addressId = a.id
+                 LEFT JOIN order_item oi ON o.id = oi.orderId
         WHERE o.id = #{id}
     </select>
 
-    <select id="selectByUser" resultMap="BaseResultMap">
-        SELECT <include refid="Base_Column_List"/>
-        FROM `order`
-        WHERE userId = #{userId}
-        ORDER BY createTime DESC
+    <!-- 修复：包含订单项的用户订单查询 -->
+    <select id="selectByUser" resultMap="OrderWithItemsMap">
+        SELECT o.id, o.orderNo, o.userId, o.addressId, o.totalAmount,
+               o.payAmount, o.status, o.payTime, o.deliveryTime, o.receiveTime,
+               o.remark, o.createTime, o.updateTime,
+               oi.id as oi_id, oi.orderId as oi_orderId, oi.productId as oi_productId,
+               oi.productN as oi_productN, oi.productImage as oi_productImage,
+               oi.price as oi_price, oi.quantity as oi_quantity,
+               oi.totalAmount as oi_totalAmount, oi.createTime as oi_createTime
+        FROM `order` o
+                 LEFT JOIN order_item oi ON o.id = oi.orderId
+        WHERE o.userId = #{userId}
+        ORDER BY o.createTime DESC
     </select>
 
     <select id="selectAll" resultMap="OrderDetailMap">
@@ -79,10 +107,15 @@
                a.id as a_id, a.receiverN as a_receiverN,
                a.receiverPhone as a_receiverPhone, a.province as a_province,
                a.city as a_city, a.district as a_district,
-               a.detailAddress as a_detailAddress
+               a.detailAddress as a_detailAddress,
+               oi.id as oi_id, oi.orderId as oi_orderId, oi.productId as oi_productId,
+               oi.productN as oi_productN, oi.productImage as oi_productImage,
+               oi.price as oi_price, oi.quantity as oi_quantity,
+               oi.totalAmount as oi_totalAmount, oi.createTime as oi_createTime
         FROM `order` o
                  LEFT JOIN user u ON o.userId = u.id
                  LEFT JOIN address a ON o.addressId = a.id
+                 LEFT JOIN order_item oi ON o.id = oi.orderId
         ORDER BY o.createTime DESC
     </select>
 

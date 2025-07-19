@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>确认订单 - 手机商城</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f5f5f5;
+        }
+
+        .order-container {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 0 15px;
+        }
+
+        .section-card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .address-item {
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .address-item:hover {
+            border-color: #007bff;
+            background-color: #f8f9fa;
+        }
+
+        .address-item.selected {
+            border-color: #007bff;
+            background-color: #e7f3ff;
+        }
+
+        .product-item {
+            display: flex;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .product-item:last-child {
+            border-bottom: none;
+        }
+
+        .product-image {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            margin-right: 15px;
+            border-radius: 4px;
+        }
+
+        .order-summary {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            position: sticky;
+            top: 20px;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        .loading-content {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+<!-- 导航栏 -->
+<div th:replace="~{common/navbar :: navbar}"></div>
+
+<!-- 加载遮罩 -->
+<div id="loadingOverlay" class="loading-overlay">
+    <div class="loading-content">
+        <i class="fa fa-spinner fa-spin fa-3x mb-3"></i>
+        <p>正在提交订单，请稍候...</p>
+    </div>
+</div>
+
+<!-- 主内容 -->
+<div class="order-container">
+    <div class="row">
+        <!-- 左侧：收货地址和商品信息 -->
+        <div class="col-lg-8">
+            <!-- 收货地址 -->
+            <div class="section-card">
+                <div class="section-title">
+                    <i class="fa fa-map-marker-alt me-2"></i>收货地址
+                </div>
+
+                <div th:if="${addresses.isEmpty()}" class="alert alert-warning">
+                    <i class="fa fa-exclamation-circle me-2"></i>
+                    您还没有收货地址，请先添加收货地址
+                    <a href="/address/add?from=order" class="btn btn-sm btn-primary ms-2">
+                        <i class="fa fa-plus"></i> 添加地址
+                    </a>
+                </div>
+
+                <div th:unless="${addresses.isEmpty()}">
+                    <form id="checkoutForm" action="/order/submit" method="post">
+                        <div th:each="address : ${addresses}">
+                            <div class="address-item"
+                                 th:classappend="${address.isDefault == 1 ? 'selected' : ''}"
+                                 th:attr="data-id=${address.id}"
+                                 onclick="selectAddress(this)">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio"
+                                           name="addressId"
+                                           th:value="${address.id}"
+                                           th:checked="${address.isDefault == 1}">
+                                    <label class="form-check-label w-100">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div>
+                                                <strong th:text="${address.receiverN}"></strong>
+                                                <span class="ms-2" th:text="${address.receiverPhone}"></span>
+                                                <span th:if="${address.isDefault == 1}" class="badge bg-primary ms-2">默认</span>
+                                                <div class="text-muted mt-1"
+                                                     th:text="${address.province + address.city + address.district + address.detailAddress}">
+                                                </div>
+                                            </div>
+                                            <button type="button" class="btn btn-sm btn-outline-primary"
+                                                    th:onclick="'editAddress(' + ${address.id} + ', event)'">
+                                                <i class="fa fa-edit"></i> 编辑
+                                            </button>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button type="button" class="btn btn-outline-primary mt-3" onclick="goToAddAddress()">
+                            <i class="fa fa-plus me-2"></i>添加新地址
+                        </button>
+
+                        <!-- 备注信息 -->
+                        <div class="mt-4">
+                            <label for="remark" class="form-label">订单备注（选填）</label>
+                            <textarea class="form-control" id="remark" name="remark" rows="2"
+                                      placeholder="请输入订单备注信息..."></textarea>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- 商品信息 -->
+            <div class="section-card">
+                <div class="section-title">
+                    <i class="fa fa-shopping-bag me-2"></i>商品信息
+                </div>
+
+                <div th:each="item : ${selectedItems}">
+                    <div class="product-item">
+                        <img th:src="${item.product.image}" th:alt="${item.product.n}" class="product-image">
+                        <div class="flex-grow-1">
+                            <h6 class="mb-1" th:text="${item.product.n}"></h6>
+                            <p class="text-muted mb-0">
+                                <span class="text-danger">￥<span th:text="${item.product.price}"></span></span>
+                                <span class="ms-3">x <span th:text="${item.quantity}"></span></span>
+                            </p>
+                        </div>
+                        <div class="text-end">
+                            <strong class="text-danger">
+                                ￥<span th:text="${item.product.price * item.quantity}"></span>
+                            </strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 右侧：订单汇总 -->
+        <div class="col-lg-4">
+            <div class="order-summary">
+                <h5 class="mb-4">订单汇总</h5>
+
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>商品总额</span>
+                        <span>￥<span th:text="${totalAmount}"></span></span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>运费</span>
+                        <span>￥0.00</span>
+                    </div>
+                    <hr>
+                    <div class="d-flex justify-content-between">
+                        <strong>应付总额</strong>
+                        <strong class="text-danger h5">￥<span th:text="${totalAmount}"></span></strong>
+                    </div>
+                </div>
+
+                <div class="alert alert-info mb-3">
+                    <i class="fa fa-wallet me-2"></i>
+                    账户余额：<strong>￥<span th:text="${userBalance}"></span></strong>
+                    <div th:if="${userBalance < totalAmount}" class="text-danger mt-1">
+                        <small>余额不足，请先充值</small>
+                    </div>
+                </div>
+
+                <button type="submit" form="checkoutForm" id="submitBtn"
+                        class="btn btn-primary submit-btn"
+                        th:disabled="${addresses.isEmpty() or userBalance < totalAmount}">
+                    <i class="fa fa-lock me-2"></i>提交订单
+                </button>
+
+                <div class="text-center mt-3">
+                    <small class="text-muted">
+                        <i class="fa fa-shield-alt me-1"></i>
+                        订单提交后将自动扣款
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 引入脚本 -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
+<script th:inline="javascript">
+    // 1. 获取Thymeleaf传递的服务器端数据
+    const userBalance = /*[[${userBalance}]]*/ 0;
+    const totalAmount = /*[[${totalAmount}]]*/ 0;
+    const hasAddresses = /*[[${!addresses.isEmpty()}]]*/ false;
+
+    // 2. 定义全局的 selectAddress 函数
+    function selectAddress(element) {
+        console.log('选择地址:', element.getAttribute('data-id'));
+
+        // 移除所有选中状态
+        document.querySelectorAll('.address-item').forEach(item => {
+            item.classList.remove('selected');
+            const radio = item.querySelector('input[type="radio"]');
+            if (radio) {
+                radio.checked = false;
+            }
+        });
+
+        // 选中当前地址
+        element.classList.add('selected');
+        const radio = element.querySelector('input[type="radio"]');
+        if (radio) {
+            radio.checked = true;
+        }
+
+        // 保存选中的地址ID到localStorage
+        const addressId = element.getAttribute('data-id');
+        if (addressId) {
+            localStorage.setItem('selectedAddressId', addressId);
+        }
+
+        // 检查是否可以提交订单
+        checkSubmitStatus();
+    }
+
+    // 3. 检查提交状态函数
+    function checkSubmitStatus() {
+        const selectedAddress = document.querySelector('input[name="addressId"]:checked');
+        const submitBtn = document.getElementById('submitBtn');
+
+        if (!submitBtn) return;
+
+        const hasSelectedAddress = selectedAddress !== null;
+        const hasEnoughBalance = userBalance >= totalAmount;
+
+        if (hasSelectedAddress && hasEnoughBalance) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fa fa-lock me-2"></i>提交订单';
+        } else if (!hasAddresses) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '请添加收货地址';
+        } else if (!hasSelectedAddress) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '请选择收货地址';
+        } else if (!hasEnoughBalance) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '余额不足';
+        }
+    }
+
+    // 4. 表单提交处理
+    function handleFormSubmit(e) {
+        e.preventDefault();
+
+        const selectedAddress = document.querySelector('input[name="addressId"]:checked');
+        if (!selectedAddress) {
+            alert('请选择收货地址');
+            return;
+        }
+
+        // 显示加载遮罩
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        if (loadingOverlay) {
+            loadingOverlay.style.display = 'flex';
+        }
+
+        // 禁用提交按钮，防止重复提交
+        const submitBtn = document.getElementById('submitBtn');
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fa fa-spinner fa-spin me-2"></i>提交中...';
+        }
+
+        // 提交表单
+        setTimeout(() => {
+            document.getElementById('checkoutForm').submit();
+        }, 500);
+    }
+
+    // 5. 页面加载完成后的初始化
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('页面加载完成，开始初始化...');
+
+        // 恢复之前选中的地址
+        const savedAddressId = localStorage.getItem('selectedAddressId');
+        let addressSelected = false;
+
+        if (savedAddressId) {
+            console.log('恢复选中的地址ID:', savedAddressId);
+            const savedAddressItem = document.querySelector(`[data-id="${savedAddressId}"]`);
+            if (savedAddressItem) {
+                selectAddress(savedAddressItem);
+                addressSelected = true;
+            }
+        }
+
+        // 如果没有保存的选择，自动选中默认地址
+        if (!addressSelected) {
+            const defaultAddress = document.querySelector('.address-item.selected');
+            if (defaultAddress) {
+                const radio = defaultAddress.querySelector('input[type="radio"]');
+                if (radio) {
+                    radio.checked = true;
+                }
+            }
+        }
+
+        // 初始检查提交状态
+        checkSubmitStatus();
+
+        // 绑定表单提交事件
+        const checkoutForm = document.getElementById('checkoutForm');
+        if (checkoutForm) {
+            checkoutForm.addEventListener('submit', handleFormSubmit);
+        }
+
+        // 阻止编辑按钮的事件冒泡
+        document.querySelectorAll('.address-item .btn').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.stopPropagation();
+            });
+        });
+    });
+
+    // 6. 防止重复提交的标志
+    let isSubmitting = false;
+
+    // 7. 修复原有的表单提交监听（如果存在）
+    $(document).ready(function() {
+        // 移除原有的submit事件监听器，使用上面定义的handleFormSubmit
+        $('#checkoutForm').off('submit').on('submit', function(e) {
+            if (isSubmitting) {
+                e.preventDefault();
+                return false;
+            }
+
+            handleFormSubmit.call(this, e);
+        });
+    });
+
+    // 8. 添加新地址按钮点击处理
+    function goToAddAddress() {
+        // 添加from参数，以便添加完成后返回订单页面
+        window.location.href = '/address/add?from=order';
+    }
+
+    // 9. 编辑地址（确保不会触发selectAddress）
+    function editAddress(addressId, event) {
+        if (event) {
+            event.stopPropagation();
+        }
+        window.location.href = '/address/edit/' + addressId + '?from=order';
+    }
+</script>
+</body>
+</html>

@@ -21,7 +21,13 @@ public interface UserMapper {
      * @return 影响行数
      */
     int insert(User user);
-
+    // 在 UserMapper 接口中添加
+    /**
+     * 搜索用户
+     * @param keyword 关键字
+     * @return 用户列表
+     */
+    List<User> searchUsers(@Param("keyword") String keyword);
     /**
      * 根据ID查询用户
      * @param id 用户ID

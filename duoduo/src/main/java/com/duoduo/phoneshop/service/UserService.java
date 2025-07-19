@@ -18,7 +18,13 @@ public interface UserService {
      * @return 注册结果
      */
     boolean register(User user);
-
+    // 在 UserService 接口中添加
+    /**
+     * 搜索用户
+     * @param keyword 关键字
+     * @return 用户列表
+     */
+    List<User> searchUsers(String keyword);
     /**
      * 用户登录
      * @param usern 用户名

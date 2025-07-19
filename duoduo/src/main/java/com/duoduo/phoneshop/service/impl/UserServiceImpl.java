@@ -11,10 +11,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * 用户服务实现类
@@ -62,7 +60,32 @@ public class UserServiceImpl implements UserService {
             return false;
         }
     }
+    @Override
+    public List<User> searchUsers(String keyword) {
+        try {
+            // 如果有 UserMapper 的搜索方法，直接调用
+            // return userMapper.searchUsers(keyword);
 
+            // 如果没有数据库层面的搜索，可以先获取所有用户然后过滤
+            List<User> allUsers = userMapper.selectAll();
+            if (keyword == null || keyword.trim().isEmpty()) {
+                return allUsers;
+            }
+
+            String lowerKeyword = keyword.toLowerCase();
+            return allUsers.stream()
+                    .filter(user ->
+                            (user.getUsern() != null && user.getUsern().toLowerCase().contains(lowerKeyword)) ||
+                                    (user.getEmail() != null && user.getEmail().toLowerCase().contains(lowerKeyword)) ||
+                                    (user.getPhone() != null && user.getPhone().contains(keyword)) ||
+                                    (user.getRealN() != null && user.getRealN().toLowerCase().contains(lowerKeyword))
+                    )
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            log.error("搜索用户失败", e);
+            return new ArrayList<>();
+        }
+    }
     @Override
     public User login(String usern, String password) {
         log.info("===== 开始登录验证 =====");

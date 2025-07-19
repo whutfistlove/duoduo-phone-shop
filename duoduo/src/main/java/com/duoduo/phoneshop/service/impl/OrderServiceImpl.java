@@ -234,7 +234,16 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public List<Order> getUserOrders(Long userId) {
-        return orderMapper.selectByUser(userId);
+        // 获取用户的所有订单
+        List<Order> orders = orderMapper.selectByUser(userId);
+
+        // 为每个订单加载订单项
+        for (Order order : orders) {
+            List<OrderItem> items = orderItemMapper.selectByOrder(order.getId());
+            order.setOrderItems(items);
+        }
+
+        return orders;
     }
 
     @Override
