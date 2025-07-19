@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<!-- 导航栏片段 -->
+<nav th:fragment="navbar" class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <div class="container">
+        <a class="navbar-brand" href="/">
+            <i class="fas fa-mobile-alt me-2"></i>手机商城
+        </a>
+
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav me-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="/">
+                        <i class="fas fa-home me-1"></i>首页
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/product/list">
+                        <i class="fas fa-th-large me-1"></i>商品列表
+                    </a>
+                </li>
+            </ul>
+
+            <ul class="navbar-nav">
+                <li class="nav-item" th:if="${session.currentUser != null}">
+                    <a class="nav-link" href="/cart">
+                        <i class="fas fa-shopping-cart me-1"></i>购物车
+                        <span class="badge bg-danger" th:if="${session.cartItemCount != null and session.cartItemCount > 0}"
+                              th:text="${session.cartItemCount}"></span>
+                    </a>
+                </li>
+
+                <li class="nav-item dropdown" th:if="${session.currentUser != null}">
+                    <a class="nav-link dropdown-toggle" href="#" id="userDropdown"
+                       data-bs-toggle="dropdown">
+                        <i class="fas fa-user me-1"></i>
+                        <span th:text="${session.currentUser.usern}">用户</span>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li>
+                            <a class="dropdown-item" href="/user/profile">
+                                <i class="fas fa-user-circle me-2"></i>个人中心
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="/order/list">
+                                <i class="fas fa-list-alt me-2"></i>我的订单
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="/address/list">
+                                <i class="fas fa-map-marker-alt me-2"></i>收货地址
+                            </a>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <a class="dropdown-item" href="/user/logout">
+                                <i class="fas fa-sign-out-alt me-2"></i>退出登录
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+
+                <li class="nav-item" th:if="${session.currentUser == null}">
+                    <a class="nav-link" href="/user/login">
+                        <i class="fas fa-sign-in-alt me-1"></i>登录
+                    </a>
+                </li>
+                <li class="nav-item" th:if="${session.currentUser == null}">
+                    <a class="nav-link" href="/user/register">
+                        <i class="fas fa-user-plus me-1"></i>注册
+                    </a>
+                </li>
+
+                <!-- 管理员菜单 -->
+                <li class="nav-item dropdown" th:if="${session.currentUser != null and session.currentUser.role == 'ADMIN'}">
+                    <a class="nav-link dropdown-toggle text-warning" href="#" id="adminDropdown"
+                       data-bs-toggle="dropdown">
+                        <i class="fas fa-cog me-1"></i>管理
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li>
+                            <a class="dropdown-item" href="/admin/dashboard">
+                                <i class="fas fa-tachometer-alt me-2"></i>控制台
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="/admin/product">
+                                <i class="fas fa-box me-2"></i>商品管理
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="/admin/order">
+                                <i class="fas fa-receipt me-2"></i>订单管理
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="/admin/user">
+                                <i class="fas fa-users me-2"></i>用户管理
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<style th:fragment="navbar-styles">
+    .navbar {
+        box-shadow: 0 2px 4px rgba(0,0,0,.1);
+    }
+
+    .navbar-brand {
+        font-weight: 600;
+        font-size: 1.25rem;
+    }
+
+    .navbar .badge {
+        position: absolute;
+        top: 5px;
+        right: -5px;
+        font-size: 0.75rem;
+        padding: 2px 5px;
+    }
+
+    .dropdown-menu {
+        margin-top: 10px;
+        border: none;
+        box-shadow: 0 4px 6px rgba(0,0,0,.1);
+    }
+
+    .dropdown-item:hover {
+        background-color: #f8f9fa;
+    }
+
+    .dropdown-item i {
+        width: 20px;
+        text-align: center;
+    }
+</style>
+</body>
+</html>

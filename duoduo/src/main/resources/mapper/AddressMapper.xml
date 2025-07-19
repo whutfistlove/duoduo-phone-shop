@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.duoduo.phoneshop.mapper.AddressMapper">
+    <resultMap id="BaseResultMap" type="com.duoduo.phoneshop.entity.Address">
+        <id column="id" property="id" jdbcType="BIGINT"/>
+        <result column="userId" property="userId" jdbcType="BIGINT"/>
+        <result column="receiverN" property="receiverN" jdbcType="VARCHAR"/>
+        <result column="receiverPhone" property="receiverPhone" jdbcType="VARCHAR"/>
+        <result column="province" property="province" jdbcType="VARCHAR"/>
+        <result column="city" property="city" jdbcType="VARCHAR"/>
+        <result column="district" property="district" jdbcType="VARCHAR"/>
+        <result column="detailAddress" property="detailAddress" jdbcType="VARCHAR"/>
+        <result column="isDefault" property="isDefault" jdbcType="INTEGER"/>
+        <result column="createTime" property="createTime" jdbcType="TIMESTAMP"/>
+        <result column="updateTime" property="updateTime" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, userId, receiverN, receiverPhone, province, city, district,
+        detailAddress, isDefault, createTime, updateTime
+    </sql>
+
+    <insert id="insert" parameterType="com.duoduo.phoneshop.entity.Address" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO address (userId, receiverN, receiverPhone, province, city,
+                             district, detailAddress, isDefault)
+        VALUES (#{userId}, #{receiverN}, #{receiverPhone}, #{province}, #{city},
+                #{district}, #{detailAddress}, #{isDefault})
+    </insert>
+
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM address
+        WHERE id = #{id}
+    </select>
+
+    <select id="selectByUser" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM address
+        WHERE userId = #{userId}
+        ORDER BY isDefault DESC, createTime DESC
+    </select>
+
+    <select id="selectDefaultByUser" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM address
+        WHERE userId = #{userId} AND isDefault = 1
+        LIMIT 1
+    </select>
+
+    <update id="update" parameterType="com.duoduo.phoneshop.entity.Address">
+        UPDATE address
+        <set>
+            <if test="receiverN != null">receiverN = #{receiverN},</if>
+            <if test="receiverPhone != null">receiverPhone = #{receiverPhone},</if>
+            <if test="province != null">province = #{province},</if>
+            <if test="city != null">city = #{city},</if>
+            <if test="district != null">district = #{district},</if>
+            <if test="detailAddress != null">detailAddress = #{detailAddress},</if>
+            <if test="isDefault != null">isDefault = #{isDefault},</if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <delete id="delete">
+        DELETE FROM address WHERE id = #{id}
+    </delete>
+
+    <update id="cancelDefaultByUser">
+        UPDATE address
+        SET isDefault = 0
+        WHERE userId = #{userId} AND isDefault = 1
+    </update>
+</mapper>

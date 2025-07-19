@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的收藏 - 多多手机商城</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Microsoft YaHei', sans-serif;
+        }
+
+        /* 确保导航栏使用纯色背景，覆盖任何渐变样式 */
+        .navbar.bg-primary {
+            background: #0d6efd !important;
+            background-image: none !important;
+        }
+
+        .favorite-header {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 5px 25px rgba(0,0,0,0.08);
+            text-align: center;
+        }
+
+        .favorite-header h1 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .favorite-stats {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 20px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #667eea;
+            display: block;
+        }
+
+        .stat-label {
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+
+        .search-section {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 5px 25px rgba(0,0,0,0.08);
+        }
+
+        .search-title {
+            color: #2c3e50;
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .search-form {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: end;
+        }
+
+        .search-field {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .search-field label {
+            color: #495057;
+            font-weight: 500;
+            margin-bottom: 5px;
+        }
+
+        .form-control {
+            border-radius: 10px;
+            border: 2px solid #e9ecef;
+            padding: 10px 15px;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+
+        .btn-search {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 10px;
+            padding: 10px 25px;
+            color: white;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            height: fit-content;
+        }
+
+        .btn-search:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+            color: white;
+        }
+
+        .btn-reset {
+            background: #6c757d;
+            border: none;
+            border-radius: 10px;
+            padding: 10px 20px;
+            color: white;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            height: fit-content;
+        }
+
+        .btn-reset:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
+            color: white;
+        }
+
+        .search-results {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+
+        .search-results-text {
+            color: #495057;
+            margin: 0;
+            font-weight: 500;
+        }
+
+        .favorite-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .favorite-card {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+            border: none;
+        }
+
+        .favorite-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 45px rgba(0,0,0,0.15);
+        }
+
+        .favorite-card.hidden {
+            display: none;
+        }
+
+        .product-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+
+        .favorite-card:hover .product-image {
+            transform: scale(1.05);
+        }
+
+        .card-body {
+            padding: 20px;
+        }
+
+        .product-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            line-height: 1.4;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .product-price {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #e74c3c;
+            margin-bottom: 15px;
+        }
+
+        .product-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+
+        .card-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 25px;
+            padding: 8px 20px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-outline-danger {
+            border-color: #e74c3c;
+            color: #e74c3c;
+            border-radius: 25px;
+            padding: 8px 15px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .btn-outline-danger:hover {
+            background-color: #e74c3c;
+            border-color: #e74c3c;
+            transform: translateY(-2px);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 25px rgba(0,0,0,0.08);
+        }
+
+        .empty-icon {
+            font-size: 4rem;
+            color: #bdc3c7;
+            margin-bottom: 20px;
+        }
+
+        .empty-title {
+            font-size: 1.5rem;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .empty-text {
+            color: #6c757d;
+            margin-bottom: 30px;
+        }
+
+        .action-buttons {
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .btn-clear {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            border: none;
+            color: white;
+            border-radius: 25px;
+            padding: 10px 30px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .btn-clear:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(231, 76, 60, 0.4);
+            color: white;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
+        }
+
+        .spinner-border {
+            color: #667eea;
+        }
+
+        @media (max-width: 768px) {
+            .favorite-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .favorite-stats {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .card-actions {
+                flex-direction: column;
+            }
+
+            .search-form {
+                flex-direction: column;
+            }
+
+            .search-field {
+                min-width: 100%;
+            }
+        }
+
+        .alert {
+            border-radius: 10px;
+            border: none;
+            margin-bottom: 20px;
+        }
+
+        .alert-success {
+            background: linear-gradient(135deg, #2ecc71, #27ae60);
+            color: white;
+        }
+
+        .alert-danger {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            color: white;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 60px 20px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 25px rgba(0,0,0,0.08);
+            margin-top: 20px;
+        }
+
+        .no-results-icon {
+            font-size: 3rem;
+            color: #bdc3c7;
+            margin-bottom: 20px;
+        }
+
+        .no-results-title {
+            font-size: 1.3rem;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .no-results-text {
+            color: #6c757d;
+        }
+    </style>
+</head>
+<body>
+<!-- 导航栏 -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <div class="container">
+        <a class="navbar-brand" href="/">多多手机商城</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav me-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="/">首页</a>
+                </li>
+            </ul>
+            <ul class="navbar-nav">
+                <li class="nav-item">
+                    <a class="nav-link" href="/cart">
+                        <i class="fa fa-shopping-cart"></i> 购物车
+                        <span class="badge bg-danger" id="cartCount">0</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" href="/favorite">
+                        <i class="fa fa-heart"></i> 收藏
+                    </a>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                        <i class="fa fa-user"></i> <span th:text="${session.currentUser.usern}">用户</span>
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="/user/profile">个人中心</a></li>
+                        <li><a class="dropdown-item" href="/order/list">我的订单</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="/user/logout">退出登录</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<div class="container mt-4">
+    <!-- 成功消息 -->
+    <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="fa fa-check-circle me-2"></i>
+        <span th:text="${success}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <!-- 错误消息 -->
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="fa fa-exclamation-circle me-2"></i>
+        <span th:text="${error}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <!-- 收藏页面头部 -->
+    <div class="favorite-header">
+        <h1><i class="fa fa-heart text-danger me-2"></i>我的收藏</h1>
+        <p class="text-muted mb-0">收藏您喜欢的商品，随时查看和购买</p>
+
+        <div class="favorite-stats">
+            <div class="stat-item">
+                <span class="stat-number" th:text="${#lists.size(favorites)}">0</span>
+                <div class="stat-label">收藏商品</div>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number" id="totalValue">¥0</span>
+                <div class="stat-label">商品总价值</div>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number" id="visibleCount">0</span>
+                <div class="stat-label">显示商品</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 搜索区域 -->
+    <div class="search-section" th:if="${not #lists.isEmpty(favorites)}">
+        <div class="search-title">
+            <i class="fa fa-search"></i>
+            搜索收藏商品
+        </div>
+        <div class="search-form">
+            <div class="search-field">
+                <label for="searchKeyword">商品名称</label>
+                <input type="text" id="searchKeyword" class="form-control"
+                       placeholder="请输入商品名称关键字..."
+                       onkeyup="handleSearchKeyup(event)">
+            </div>
+            <div class="search-field">
+                <label for="minPrice">最低价格</label>
+                <input type="number" id="minPrice" class="form-control"
+                       placeholder="0" min="0" step="0.01"
+                       onchange="performSearch()">
+            </div>
+            <div class="search-field">
+                <label for="maxPrice">最高价格</label>
+                <input type="number" id="maxPrice" class="form-control"
+                       placeholder="不限" min="0" step="0.01"
+                       onchange="performSearch()">
+            </div>
+            <div class="search-field">
+                <button type="button" class="btn btn-search" onclick="performSearch()">
+                    <i class="fa fa-search me-2"></i>搜索
+                </button>
+            </div>
+            <div class="search-field">
+                <button type="button" class="btn btn-reset" onclick="resetSearch()">
+                    <i class="fa fa-refresh me-2"></i>重置
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 搜索结果提示 -->
+    <div id="searchResults" class="search-results" style="display: none;">
+        <p class="search-results-text" id="searchResultsText">
+            找到 <span id="resultCount">0</span> 个符合条件的商品
+        </p>
+    </div>
+
+    <!-- 操作按钮 -->
+    <div class="action-buttons" th:if="${not #lists.isEmpty(favorites)}">
+        <button type="button" class="btn btn-clear" onclick="clearAllFavorites()">
+            <i class="fa fa-trash me-2"></i>清空收藏
+        </button>
+    </div>
+
+    <!-- 收藏商品列表 -->
+    <div th:if="${not #lists.isEmpty(favorites)}">
+        <div class="favorite-grid" id="favoriteGrid">
+            <div class="favorite-card" th:each="favorite : ${favorites}"
+                 th:data-product-id="${favorite.productId}"
+                 th:data-product-name="${favorite.product.n}"
+                 th:data-product-price="${favorite.product.price}">
+                <img th:src="${favorite.product.image != null ? favorite.product.image : '/images/default-product.jpg'}"
+                     th:alt="${favorite.product.n}"
+                     class="product-image"
+                     onerror="this.src='/images/default-product.jpg'">
+
+                <div class="card-body">
+                    <h5 class="product-title" th:text="${favorite.product.n}">商品名称</h5>
+                    <div class="product-price" th:text="'¥' + ${favorite.product.price}">¥0</div>
+
+                    <div class="product-meta">
+                        <span><i class="fa fa-calendar me-1"></i>收藏时间</span>
+                        <span th:text="${#dates.format(favorite.createTime, 'yyyy-MM-dd')}">2025-01-01</span>
+                    </div>
+
+                    <div class="card-actions">
+                        <button type="button" class="btn btn-primary flex-fill"
+                                th:onclick="'addToCart(' + ${favorite.productId} + ')'">
+                            <i class="fa fa-shopping-cart me-1"></i>加入购物车
+                        </button>
+                        <button type="button" class="btn btn-outline-danger"
+                                th:onclick="'removeFavorite(' + ${favorite.productId} + ')'">
+                            <i class="fa fa-heart-broken"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 无搜索结果 -->
+        <div id="noResults" class="no-results" style="display: none;">
+            <div class="no-results-icon">
+                <i class="fa fa-search"></i>
+            </div>
+            <h3 class="no-results-title">没有找到符合条件的商品</h3>
+            <p class="no-results-text">请尝试使用其他搜索条件</p>
+        </div>
+    </div>
+
+    <!-- 空状态 -->
+    <div th:if="${#lists.isEmpty(favorites)}" class="empty-state">
+        <div class="empty-icon">
+            <i class="fa fa-heart-broken"></i>
+        </div>
+        <h3 class="empty-title">还没有收藏任何商品</h3>
+        <p class="empty-text">快去商城逛逛，收藏您喜欢的商品吧！</p>
+        <a href="/" class="btn btn-primary">
+            <i class="fa fa-shopping-bag me-2"></i>去购物
+        </a>
+    </div>
+</div>
+
+<!-- 确认对话框模态框 -->
+<div class="modal fade" id="confirmModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">确认操作</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p id="confirmMessage">确定要执行此操作吗？</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-danger" id="confirmBtn">确定</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast 通知 -->
+<div class="toast-container position-fixed top-0 end-0 p-3">
+    <div id="successToast" class="toast" role="alert">
+        <div class="toast-header bg-success text-white">
+            <i class="fa fa-check-circle me-2"></i>
+            <strong class="me-auto">成功</strong>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
+        </div>
+        <div class="toast-body" id="successMessage">操作成功！</div>
+    </div>
+
+    <div id="errorToast" class="toast" role="alert">
+        <div class="toast-header bg-danger text-white">
+            <i class="fa fa-exclamation-circle me-2"></i>
+            <strong class="me-auto">错误</strong>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
+        </div>
+        <div class="toast-body" id="errorMessage">操作失败！</div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // 计算商品总价值
+    function calculateTotalValue() {
+        let total = 0;
+        document.querySelectorAll('.product-price').forEach(function(element) {
+            const price = parseFloat(element.textContent.replace('¥', '').replace(',', ''));
+            if (!isNaN(price)) {
+                total += price;
+            }
+        });
+        document.getElementById('totalValue').textContent = '¥' + total.toLocaleString();
+    }
+
+    // 更新显示的商品数量
+    function updateVisibleCount() {
+        const visibleCards = document.querySelectorAll('.favorite-card:not(.hidden)');
+        document.getElementById('visibleCount').textContent = visibleCards.length;
+    }
+
+    // 显示Toast通知
+    function showToast(type, message) {
+        const toast = document.getElementById(type + 'Toast');
+        const messageElement = document.getElementById(type + 'Message');
+        messageElement.textContent = message;
+        const toastInstance = new bootstrap.Toast(toast);
+        toastInstance.show();
+    }
+
+    // 处理搜索输入框回车事件
+    function handleSearchKeyup(event) {
+        if (event.key === 'Enter') {
+            performSearch();
+        }
+    }
+
+    // 执行搜索
+    function performSearch() {
+        const keyword = document.getElementById('searchKeyword').value.toLowerCase().trim();
+        const minPrice = parseFloat(document.getElementById('minPrice').value) || 0;
+        const maxPrice = parseFloat(document.getElementById('maxPrice').value) || Number.MAX_VALUE;
+
+        const cards = document.querySelectorAll('.favorite-card');
+        let visibleCount = 0;
+
+        cards.forEach(function(card) {
+            const productName = card.dataset.productName.toLowerCase();
+            const productPrice = parseFloat(card.dataset.productPrice);
+
+            let matchKeyword = keyword === '' || productName.includes(keyword);
+            let matchPrice = productPrice >= minPrice && productPrice <= maxPrice;
+
+            if (matchKeyword && matchPrice) {
+                card.classList.remove('hidden');
+                visibleCount++;
+            } else {
+                card.classList.add('hidden');
+            }
+        });
+
+        // 显示搜索结果
+        const searchResults = document.getElementById('searchResults');
+        const searchResultsText = document.getElementById('searchResultsText');
+        const resultCount = document.getElementById('resultCount');
+        const noResults = document.getElementById('noResults');
+
+        if (keyword || minPrice > 0 || maxPrice < Number.MAX_VALUE) {
+            searchResults.style.display = 'block';
+            resultCount.textContent = visibleCount;
+
+            if (visibleCount === 0) {
+                noResults.style.display = 'block';
+            } else {
+                noResults.style.display = 'none';
+            }
+        } else {
+            searchResults.style.display = 'none';
+            noResults.style.display = 'none';
+        }
+
+        updateVisibleCount();
+    }
+
+    // 重置搜索
+    function resetSearch() {
+        document.getElementById('searchKeyword').value = '';
+        document.getElementById('minPrice').value = '';
+        document.getElementById('maxPrice').value = '';
+
+        const cards = document.querySelectorAll('.favorite-card');
+        cards.forEach(function(card) {
+            card.classList.remove('hidden');
+        });
+
+        document.getElementById('searchResults').style.display = 'none';
+        document.getElementById('noResults').style.display = 'none';
+
+        updateVisibleCount();
+    }
+
+    // 取消收藏
+    function removeFavorite(productId) {
+        document.getElementById('confirmMessage').textContent = '确定要取消收藏这个商品吗？';
+        const modal = new bootstrap.Modal(document.getElementById('confirmModal'));
+
+        document.getElementById('confirmBtn').onclick = function() {
+            fetch('/favorite/remove', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: 'productId=' + productId
+            })
+                .then(response => response.json())
+                .then(data => {
+                    modal.hide();
+                    if (data.success) {
+                        // 移除卡片
+                        const card = document.querySelector(`[data-product-id="${productId}"]`);
+                        card.style.animation = 'fadeOut 0.5s ease-out';
+                        setTimeout(() => {
+                            card.remove();
+                            calculateTotalValue();
+                            updateVisibleCount();
+
+                            // 检查是否还有收藏商品
+                            if (document.querySelectorAll('.favorite-card').length === 0) {
+                                location.reload();
+                            }
+                        }, 500);
+                        showToast('success', data.message);
+                    } else {
+                        showToast('error', data.message);
+                    }
+                })
+                .catch(error => {
+                    modal.hide();
+                    showToast('error', '网络错误，请重试');
+                });
+        };
+
+        modal.show();
+    }
+
+    // 清空收藏
+    function clearAllFavorites() {
+        document.getElementById('confirmMessage').textContent = '确定要清空所有收藏吗？此操作不可恢复！';
+        const modal = new bootstrap.Modal(document.getElementById('confirmModal'));
+
+        document.getElementById('confirmBtn').onclick = function() {
+            window.location.href = '/favorite/clear';
+        };
+
+        modal.show();
+    }
+
+    // 添加到购物车
+    function addToCart(productId) {
+        fetch('/cart/add', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: 'productId=' + productId + '&quantity=1'
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showToast('success', data.message);
+                    // 更新购物车数量
+                    updateCartCount();
+                } else {
+                    showToast('error', data.message);
+                }
+            })
+            .catch(error => {
+                // showToast('error', '网络错误，请重试');
+            });
+    }
+
+    // 页面加载完成后执行
+    document.addEventListener('DOMContentLoaded', function() {
+        calculateTotalValue();
+        updateVisibleCount();
+
+        // 添加淡出动画样式
+        const style = document.createElement('style');
+        style.textContent = `
+                @keyframes fadeOut {
+                    from { opacity: 1; transform: scale(1); }
+                    to { opacity: 0; transform: scale(0.8); }
+                }
+            `;
+        document.head.appendChild(style);
+    });
+</script>
+</body>
+</html>

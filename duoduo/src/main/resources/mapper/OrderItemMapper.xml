@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.duoduo.phoneshop.mapper.OrderItemMapper">
+    <resultMap id="BaseResultMap" type="com.duoduo.phoneshop.entity.OrderItem">
+        <id column="id" property="id" jdbcType="BIGINT"/>
+        <result column="orderId" property="orderId" jdbcType="BIGINT"/>
+        <result column="productId" property="productId" jdbcType="BIGINT"/>
+        <result column="productN" property="productName" jdbcType="VARCHAR"/>
+        <result column="productImage" property="productImage" jdbcType="VARCHAR"/>
+        <result column="price" property="price" jdbcType="DECIMAL"/>
+        <result column="quantity" property="quantity" jdbcType="INTEGER"/>
+        <result column="totalAmount" property="totalAmount" jdbcType="DECIMAL"/>
+        <result column="createTime" property="createTime" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, orderId, productId, productN, productImage, price,
+        quantity, totalAmount, createTime
+    </sql>
+
+    <insert id="insert" parameterType="com.duoduo.phoneshop.entity.OrderItem" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO order_item (orderId, productId, productN, productImage,
+                                price, quantity, totalAmount)
+        VALUES (#{orderId}, #{productId}, #{productName}, #{productImage},
+                #{price}, #{quantity}, #{totalAmount})
+    </insert>
+
+    <select id="selectByOrder" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM order_item
+        WHERE orderId = #{orderId}
+        ORDER BY id ASC
+    </select>
+
+    <delete id="deleteByOrder">
+        DELETE FROM order_item WHERE orderId = #{orderId}
+    </delete>
+</mapper>

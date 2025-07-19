@@ -1,0 +1,92 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /
+alipay:
+  appId: 9021000150656933
+  merchantPrivateKey: MIIEvwIBADANBgkqhkiG9w0BAQEFAASCBKkwggSlAgEAAoIBAQCgrWiXqQ7VcWQiAgq3A9uWwwXpZfOZRIfhhZZF3wQpEn1D4gC/vjHKhkmkcCGBDR8SoZ7piBr2XN6y5dLz2lRKmYQ3lTP0/W5uB+dNmZvyD+Mu0ky5m0GniEcyWzpg+7rg4hrLz5VPzQqf/WzsdVQsIz47eaDjNmzyLMSTN3qmldAmmA7atMQSrGlWTPDMOPlWh2iTr9Rz7fb088GEF3bbvNOWCjuAQ0gkSVDU19veynfFRBCelwj1Iepxao7JGVey1yruzxnLEEyHXaY15OY7OnQG0BodXmX53ea37deNUtQaPgZXgyiYXNILRmpzzQO6Op9Ox4epqLQfr6DyE9S7AgMBAAECggEAN2LvPfAxw9O9f5eSl/nFdReu7wCM0xVzfYLuBRHWPk44TfEW7wGh6j0WH4/jjLe4MVTzEW8wVCI5RhPA/vwQuFJo6DwPV/EQYu9ohTBhODTPzDED76scG6L3X91gp1O+3Iw0TnM09fgpJHNYW74qELjpV9kaY5g8P9K8xD6IkeleyMMayNarY8OjtpG9sKvHmVEB9OamIvZD7ImtiRTeNBvSiqHtEwstdFcDFNxR/ibY7Dr62cZHdwjoLX7avAwel5yU2wU0OUCfL/py+9cZKG3C1dmYbghBWQtx9UAMsgxsh2eSib8VJDlSwBAGXaIOlAE/sQX5kct8OhUjCcIysQKBgQDvHVMUL+Y/+grvRsnbIBfw+9v/hdXTeCYBIuMjeNaOdihnquT0MRog8xpQ8HBca45p+O+MMjEMBXrQeVf3F9tY8celqzCY1gxy0uXdhfGrVdDC+YHfLz/mAtlT1F9QDCuXKsHmSK5Xb9T1TEIBIgcXLdso2eEY1JhNFJfoVrCNqQKBgQCsBhvtvPSQ60etUu6WgCffwxYqYM5PEKZldCxEN+WXfKmjkIezJ9vUX1VUreSgejeFMM/GIPuZ230uokoYBDR6+l1DhUxmqWvfaNHoRwm8Po0FiToULdqD5MmAFNEPTjExOF7sZz9ZlITWQonRSz27+pnHxYfccuURo6xWljqlwwKBgQCLRL4txNRLsPwLb2SEb0Xigx8Yzb/D4nfoM4SuFWSKJ0HTV5Lws2SvikhqmhAnlDGngWksc9NjWBG3OOXGMiv8ux34XSP58LnhavqdMrWWgG4OEbrV3jROaJxiGhDFk8ET08CJuw1oOeeEU70h4crVckzylyxnBPQL+RGdLli4uQKBgQCMbRRBd12CK77AW5HOo+FpBX1DrPDdlC7xZOt56NNwXWCx2BsegewvKn+i961J31sRTC5gg65AA+/lsK+heVVKCrU1mEwtBiK8JnosDkmBNOKz4TjbHi9iOdLPzq52uxLnJig+/W22d8oUig6tHqnPmRwN+08UA2rBgoX9zPclNwKBgQDEq4DZgFCTNxItIfct1nprsgGvg7cTS+tsRXy3FkX5dg/yhiH5e3aHhKySQnT5gVBSO+EJoGo+b2GYlwKrYWggqEFIH1XiCxm4j5HD6NLlWc6PkS215/bPmdv7fVzbnko9FIaAFXLtZ0Clgz0DSG4tesi2rR0xqeQ7/Lf/AwcFHA==
+  alipayPublicKey: MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAoK1ol6kO1XFkIgIKtwPblsMF6WXzmUSH4YWWRd8EKRJ9Q+IAv74xyoZJpHAhgQ0fEqGe6Yga9lzesuXS89pUSpmEN5Uz9P1ubgfnTZmb8g/jLtJMuZtBp4hHMls6YPu64OIay8+VT80Kn/1s7HVULCM+O3mg4zZs8izEkzd6ppXQJpgO2rTEEqxpVkzwzDj5Vodok6/Uc+329PPBhBd227zTlgo7gENIJElQ1Nfb3sp3xUQQnpcI9SHqcWqOyRlXstcq7s8ZyxBMh12mNeTmOzp0BtAaHV5l+d3mt+3XjVLUGj4GV4MomFzSC0Zqc80DujqfTseHqai0H6+g8hPUuwIDAQAB
+  notifyUrl: http:// 127.0.0.1:8080/api/alipay/notify
+  returnUrl: http://localhost:8080/user/recharge
+  signType: RSA2
+  charset: utf-8
+  # 我的支付宝网关地址
+  gatewayUrl: https://openapi-sandbox.dl.alipaydev.com/gateway.do
+
+spring:
+  application:
+    name: phoneshop
+  # 数据源配置
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/phoneshop?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true
+    username: root
+    password: 13477514988
+    hikari:
+      minimum-idle: 5
+      maximum-pool-size: 20
+      idle-timeout: 30000
+      max-lifetime: 1800000
+      connection-timeout: 30000
+
+  # Thymeleaf配置
+  thymeleaf:
+    prefix: classpath:/templates/
+    suffix: .html
+    mode: HTML
+    encoding: UTF-8
+    cache: false
+    servlet:
+      content-type: text/html
+
+  # 文件上传配置
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+  # 邮件配置
+  mail:
+    host: smtp.qq.com
+    port: 587
+    username: 2862857996@qq.com  # 请替换为实际的邮箱
+    password: kynshzeknmnldhdh      # 请替换为实际的密码或授权码
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+          timeout: 5000
+
+  # Session配置
+  session:
+    store-type: none
+    timeout: 30m
+
+# MyBatis配置
+mybatis:
+  mapper-locations: classpath:mapper/*.xml
+  type-aliases-package: com.duoduo.phoneshop.entity
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+# 日志配置
+logging:
+  level:
+    com.duoduo.phoneshop: DEBUG
+    org.springframework.web: INFO
+    org.springframework.security: DEBUG
+  pattern:
+    console: '%d{yyyy-MM-dd HH:mm:ss} - %msg%n'
+    file: '%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n'
+  file:
+    name: logs/phoneshop.log
+
+# 自定义配置
+app:
+  name: 多多购手机网站
+  version: 1.0.0
+  upload-path: ./upload/

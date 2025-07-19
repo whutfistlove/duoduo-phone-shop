@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.duoduo.phoneshop.mapper.UserMapper">
+    <resultMap id="BaseResultMap" type="com.duoduo.phoneshop.entity.User">
+        <id column="id" property="id" jdbcType="BIGINT"/>
+        <result column="usern" property="usern" jdbcType="VARCHAR"/>
+        <result column="password" property="password" jdbcType="VARCHAR"/>
+        <result column="email" property="email" jdbcType="VARCHAR"/>
+        <result column="phone" property="phone" jdbcType="VARCHAR"/>
+        <result column="realN" property="realN" jdbcType="VARCHAR"/>
+        <result column="balance" property="balance" jdbcType="DECIMAL"/>
+        <result column="role" property="role" jdbcType="VARCHAR"/>
+        <result column="status" property="status" jdbcType="INTEGER"/>
+        <result column="createTime" property="createTime" jdbcType="TIMESTAMP"/>
+        <result column="updateTime" property="updateTime" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, usern, password, email, phone, realN, balance, role, status,
+        createTime, updateTime
+    </sql>
+
+    <insert id="insert" parameterType="com.duoduo.phoneshop.entity.User" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO user (usern, password, email, phone, realN, balance, role, status)
+        VALUES (#{usern}, #{password}, #{email}, #{phone}, #{realN},
+                #{balance}, #{role}, #{status})
+    </insert>
+
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM user
+        WHERE id = #{id}
+    </select>
+
+    <select id="selectByUsern" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM user
+        WHERE usern = #{usern}
+    </select>
+    <!-- 在 UserMapper.xml 中添加 -->
+    <select id="searchUsers" resultType="com.duoduo.phoneshop.entity.User">
+        SELECT * FROM user
+        WHERE 1=1
+        <if test="keyword != null and keyword != ''">
+            AND (
+            usern LIKE CONCAT('%', #{keyword}, '%') OR
+            email LIKE CONCAT('%', #{keyword}, '%') OR
+            phone LIKE CONCAT('%', #{keyword}, '%') OR
+            real_n LIKE CONCAT('%', #{keyword}, '%')
+            )
+        </if>
+        ORDER BY create_time DESC
+    </select>
+
+    <update id="update" parameterType="com.duoduo.phoneshop.entity.User">
+        UPDATE user
+        <set>
+            <if test="password != null">password = #{password},</if>
+            <if test="email != null">email = #{email},</if>
+            <if test="phone != null">phone = #{phone},</if>
+            <if test="realN != null">realN = #{realN},</if>
+            <if test="balance != null">balance = #{balance},</if>
+            <if test="role != null">role = #{role},</if>
+            <if test="status != null">status = #{status},</if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <delete id="delete">
+        DELETE FROM user WHERE id = #{id}
+    </delete>
+
+    <select id="selectAll" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM user
+        ORDER BY createTime DESC
+    </select>
+
+    <select id="selectByRole" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM user
+        WHERE role = #{role}
+        ORDER BY createTime DESC
+    </select>
+</mapper>
