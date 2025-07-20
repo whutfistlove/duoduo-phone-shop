@@ -13,15 +13,13 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import javax.servlet.http.HttpSession;
 import java.io.File;
 import java.math.BigDecimal;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.math.RoundingMode;
+import java.util.*;
 import javax.servlet.http.HttpServletResponse;
 import java.io.PrintWriter;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
+import java.util.stream.Collectors;
+
 /**
  * 管理员控制器
  *
@@ -795,22 +793,273 @@ public class AdminController {
             return "redirect:/user/login";
         }
 
-        // 获取各种统计数据
+        // ========== 1. 订单统计 ==========
+        // 获取所有订单
         List<Order> allOrders = orderService.getAllOrders();
-        List<Order> pendingOrders = orderService.getOrdersByStatus(0);
-        List<Order> paidOrders = orderService.getOrdersByStatus(1);
-        List<Order> deliveredOrders = orderService.getOrdersByStatus(2);
-        List<Order> completedOrders = orderService.getOrdersByStatus(3);
 
+        // 按状态分类订单
+        List<Order> pendingOrders = orderService.getOrdersByStatus(0);      // 待支付
+        List<Order> paidOrders = orderService.getOrdersByStatus(1);         // 已支付
+        List<Order> deliveredOrders = orderService.getOrdersByStatus(2);    // 已发货
+        List<Order> completedOrders = orderService.getOrdersByStatus(3);    // 已完成
+        List<Order> cancelledOrders = orderService.getOrdersByStatus(4);    // 已取消
+
+        // 设置订单数量统计
         model.addAttribute("totalOrders", allOrders.size());
         model.addAttribute("pendingOrders", pendingOrders.size());
         model.addAttribute("paidOrders", paidOrders.size());
         model.addAttribute("deliveredOrders", deliveredOrders.size());
         model.addAttribute("completedOrders", completedOrders.size());
+        model.addAttribute("cancelledOrders", cancelledOrders.size());
 
-        // 计算销售额
+        // 计算订单完成率
+        double completionRate = allOrders.size() > 0 ?
+                (double) completedOrders.size() / allOrders.size() * 100 : 0;
+        model.addAttribute("orderCompletionRate", String.format("%.2f", completionRate));
+
+        // 计算订单取消率
+        double cancellationRate = allOrders.size() > 0 ?
+                (double) cancelledOrders.size() / allOrders.size() * 100 : 0;
+        model.addAttribute("orderCancellationRate", String.format("%.2f", cancellationRate));
+
+        // ========== 2. 销售额统计 ==========
+        // 总销售额
         BigDecimal totalSales = orderService.getTotalSales();
         model.addAttribute("totalSales", totalSales != null ? totalSales : BigDecimal.ZERO);
+
+        // 今日订单数和销售额
+        Integer todayOrderCount = orderService.getTodayOrderCount();
+        model.addAttribute("todayOrderCount", todayOrderCount != null ? todayOrderCount : 0);
+
+        // 本月订单数和销售额
+        Integer monthOrderCount = orderService.getMonthOrderCount();
+        model.addAttribute("monthOrderCount", monthOrderCount != null ? monthOrderCount : 0);
+
+        // 计算平均订单金额
+        BigDecimal avgOrderAmount = BigDecimal.ZERO;
+        if (completedOrders.size() > 0) {
+            BigDecimal completedSalesTotal = completedOrders.stream()
+                    .map(Order::getTotalAmount)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            avgOrderAmount = completedSalesTotal.divide(
+                    new BigDecimal(completedOrders.size()), 2, RoundingMode.HALF_UP);
+        }
+        model.addAttribute("avgOrderAmount", avgOrderAmount);
+
+        // ========== 3. 商品统计 ==========
+        List<Product> allProducts = productService.getAllProducts();
+
+        // 总商品数
+        model.addAttribute("totalProducts", allProducts.size());
+
+        // 在售商品数（status=1）
+        long activeProducts = allProducts.stream()
+                .filter(p -> p.getStatus() == 1)
+                .count();
+        model.addAttribute("activeProducts", activeProducts);
+
+        // 下架商品数（status=0）
+        long inactiveProducts = allProducts.stream()
+                .filter(p -> p.getStatus() == 0)
+                .count();
+        model.addAttribute("inactiveProducts", inactiveProducts);
+
+        // 库存警告商品数（库存小于10）
+        long lowStockProducts = allProducts.stream()
+                .filter(p -> p.getStock() < 10)
+                .count();
+        model.addAttribute("lowStockProducts", lowStockProducts);
+
+        // 缺货商品数（库存为0）
+        long outOfStockProducts = allProducts.stream()
+                .filter(p -> p.getStock() == 0)
+                .count();
+        model.addAttribute("outOfStockProducts", outOfStockProducts);
+
+        // 热销商品TOP5
+        List<Product> hotProducts = productService.getHotProducts(5);
+        model.addAttribute("hotProducts", hotProducts);
+
+        // ========== 4. 用户统计 ==========
+        List<User> allUsers = userService.getAllUsers();
+
+        // 总用户数
+        model.addAttribute("totalUsers", allUsers.size());
+
+        // 活跃用户数（status=1）
+        long activeUsers = allUsers.stream()
+                .filter(u -> u.getStatus() == 1)
+                .count();
+        model.addAttribute("activeUsers", activeUsers);
+
+        // 禁用用户数（status=0）
+        long inactiveUsers = allUsers.stream()
+                .filter(u -> u.getStatus() == 0)
+                .count();
+        model.addAttribute("inactiveUsers", inactiveUsers);
+
+        // 管理员数量
+        long adminCount = allUsers.stream()
+                .filter(u -> "ADMIN".equals(u.getRole()))
+                .count();
+        model.addAttribute("adminCount", adminCount);
+
+        // 普通用户数量
+        long normalUserCount = allUsers.stream()
+                .filter(u -> "USER".equals(u.getRole()))
+                .count();
+        model.addAttribute("normalUserCount", normalUserCount);
+
+        // 用户总余额
+        BigDecimal totalUserBalance = allUsers.stream()
+                .map(User::getBalance)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        model.addAttribute("totalUserBalance", totalUserBalance);
+
+        // ========== 5. 分类统计 ==========
+        List<Category> allCategories = categoryService.getAllCategories();
+        model.addAttribute("totalCategories", allCategories.size());
+
+        // 每个分类的商品数量和销售额统计
+        List<Map<String, Object>> categoryStats = new ArrayList<>();
+        for (Category category : allCategories) {
+            Map<String, Object> stat = new HashMap<>();
+            stat.put("categoryId", category.getId());
+            stat.put("categoryName", category.getN());
+
+            // 获取该分类下的商品
+            List<Product> categoryProducts = productService.getProductsByCategory(category.getId());
+            stat.put("productCount", categoryProducts.size());
+
+            // 计算该分类的销售额（通过订单项统计）
+            BigDecimal categorySales = BigDecimal.ZERO;
+            for (Order order : completedOrders) {
+                // 添加空值检查
+                if (order.getOrderItems() != null) {
+                    for (OrderItem item : order.getOrderItems()) {
+                        Product product = productService.getProductById(item.getProductId());
+                        if (product != null && product.getCategoryId().equals(category.getId())) {
+                            categorySales = categorySales.add(item.getTotalAmount());
+                        }
+                    }
+                }
+            }
+            stat.put("sales", categorySales);
+
+            categoryStats.add(stat);
+        }
+        model.addAttribute("categoryStats", categoryStats);
+
+        // ========== 6. 时间维度统计（用于图表） ==========
+        // 最近7天每日订单数和销售额
+        List<Map<String, Object>> dailyStats = new ArrayList<>();
+        Calendar cal = Calendar.getInstance();
+        for (int i = 6; i >= 0; i--) {
+            cal.setTime(new Date());
+            cal.add(Calendar.DAY_OF_MONTH, -i);
+            cal.set(Calendar.HOUR_OF_DAY, 0);
+            cal.set(Calendar.MINUTE, 0);
+            cal.set(Calendar.SECOND, 0);
+            Date startDate = cal.getTime();
+
+            cal.set(Calendar.HOUR_OF_DAY, 23);
+            cal.set(Calendar.MINUTE, 59);
+            cal.set(Calendar.SECOND, 59);
+            Date endDate = cal.getTime();
+
+            Map<String, Object> dayStat = new HashMap<>();
+            dayStat.put("date", new SimpleDateFormat("MM-dd").format(startDate));
+
+            // 统计当天订单数和销售额
+            long dayOrderCount = allOrders.stream()
+                    .filter(o -> o.getCreateTime().after(startDate) && o.getCreateTime().before(endDate))
+                    .count();
+            dayStat.put("orderCount", dayOrderCount);
+
+            BigDecimal daySales = allOrders.stream()
+                    .filter(o -> o.getCreateTime().after(startDate) && o.getCreateTime().before(endDate))
+                    .filter(o -> o.getStatus() >= 1) // 已支付的订单
+                    .map(Order::getTotalAmount)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            dayStat.put("sales", daySales);
+
+            dailyStats.add(dayStat);
+        }
+        model.addAttribute("dailyStats", dailyStats);
+
+        // ========== 7. 热门商品销量排行（用于图表） ==========
+        Map<Product, Integer> productSalesMap = new HashMap<>();
+        for (Order order : completedOrders) {
+            // 添加空值检查
+            if (order.getOrderItems() != null) {
+                for (OrderItem item : order.getOrderItems()) {
+                    Product product = productService.getProductById(item.getProductId());
+                    if (product != null) {
+                        productSalesMap.put(product,
+                                productSalesMap.getOrDefault(product, 0) + item.getQuantity());
+                    }
+                }
+            }
+        }
+
+        // 排序并取前10
+        List<Map<String, Object>> topSellingProducts = productSalesMap.entrySet().stream()
+                .sorted(Map.Entry.<Product, Integer>comparingByValue().reversed())
+                .limit(10)
+                .map(entry -> {
+                    Map<String, Object> map = new HashMap<>();
+                    map.put("product", entry.getKey());
+                    map.put("salesCount", entry.getValue());
+                    return map;
+                })
+                .collect(Collectors.toList());
+        model.addAttribute("topSellingProducts", topSellingProducts);
+
+        // ========== 8. 用户消费排行（用于图表） ==========
+        Map<User, BigDecimal> userSpendingMap = new HashMap<>();
+        for (Order order : completedOrders) {
+            User user = userService.getUserById(order.getUserId());
+            if (user != null) {
+                userSpendingMap.put(user,
+                        userSpendingMap.getOrDefault(user, BigDecimal.ZERO).add(order.getTotalAmount()));
+            }
+        }
+
+        // 排序并取前10
+        List<Map<String, Object>> topSpendingUsers = userSpendingMap.entrySet().stream()
+                .sorted(Map.Entry.<User, BigDecimal>comparingByValue().reversed())
+                .limit(10)
+                .map(entry -> {
+                    Map<String, Object> map = new HashMap<>();
+                    map.put("user", entry.getKey());
+                    map.put("totalSpending", entry.getValue());
+                    return map;
+                })
+                .collect(Collectors.toList());
+        model.addAttribute("topSpendingUsers", topSpendingUsers);
+
+        // ========== 9. 其他业务指标 ==========
+        // 转化率（完成订单数/总订单数）
+        double conversionRate = allOrders.size() > 0 ?
+                (double) (paidOrders.size() + deliveredOrders.size() + completedOrders.size()) / allOrders.size() * 100 : 0;
+        model.addAttribute("conversionRate", String.format("%.2f", conversionRate));
+
+        // 用户平均消费
+        BigDecimal avgUserSpending = BigDecimal.ZERO;
+        if (normalUserCount > 0 && totalSales != null) {
+            avgUserSpending = totalSales.divide(new BigDecimal(normalUserCount), 2, RoundingMode.HALF_UP);
+        }
+        model.addAttribute("avgUserSpending", avgUserSpending);
+
+        // 商品平均价格
+        BigDecimal avgProductPrice = BigDecimal.ZERO;
+        if (!allProducts.isEmpty()) {
+            BigDecimal totalPrice = allProducts.stream()
+                    .map(Product::getPrice)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            avgProductPrice = totalPrice.divide(new BigDecimal(allProducts.size()), 2, RoundingMode.HALF_UP);
+        }
+        model.addAttribute("avgProductPrice", avgProductPrice);
 
         return "admin/reports";
     }

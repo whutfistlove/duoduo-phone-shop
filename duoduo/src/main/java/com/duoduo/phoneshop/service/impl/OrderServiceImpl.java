@@ -248,12 +248,29 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public List<Order> getAllOrders() {
-        return orderMapper.selectAll();
-    }
+        // 获取所有订单
+        List<Order> orders = orderMapper.selectAll();
 
+        // 为每个订单加载订单项（重要！）
+        for (Order order : orders) {
+            List<OrderItem> items = orderItemMapper.selectByOrder(order.getId());
+            order.setOrderItems(items);
+        }
+
+        return orders;
+    }
     @Override
     public List<Order> getOrdersByStatus(Integer status) {
-        return orderMapper.selectByStatus(status);
+        // 获取指定状态的订单
+        List<Order> orders = orderMapper.selectByStatus(status);
+
+        // 为每个订单加载订单项（重要！）
+        for (Order order : orders) {
+            List<OrderItem> items = orderItemMapper.selectByOrder(order.getId());
+            order.setOrderItems(items);
+        }
+
+        return orders;
     }
 
     @Override

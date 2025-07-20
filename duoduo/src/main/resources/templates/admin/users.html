@@ -5,201 +5,325 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>客户管理 - 管理后台</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
+        :root {
+            --sidebar-bg: #2c3e50;
+            --sidebar-hover: #34495e;
+            --primary: #3498db;
+            --success: #2ecc71;
+            --warning: #f39c12;
+            --danger: #e74c3c;
+        }
+
+        body { background-color: #f8f9fa; }
+
         .sidebar {
             min-height: 100vh;
-            background-color: #343a40;
+            background: var(--sidebar-bg);
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
         }
+
         .sidebar .nav-link {
-            color: #fff;
-            padding: 15px 20px;
+            color: rgba(255,255,255,0.8);
+            padding: 12px 20px;
+            transition: all 0.3s;
+            border-left: 3px solid transparent;
         }
+
         .sidebar .nav-link:hover {
-            background-color: #495057;
+            background: var(--sidebar-hover);
+            color: #fff;
+            border-left-color: var(--primary);
         }
+
         .sidebar .nav-link.active {
-            background-color: #007bff;
+            background: var(--sidebar-hover);
+            color: #fff;
+            border-left-color: var(--primary);
         }
-        .status-active {
-            color: #28a745;
+
+        .user-info {
+            padding: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
         }
-        .status-inactive {
-            color: #dc3545;
+
+        .search-card {
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            padding: 25px;
+            margin-bottom: 25px;
         }
-        .role-admin {
-            background-color: #ffc107;
+
+        .main-card {
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        }
+
+        .table-container {
+            padding: 0;
+        }
+
+        .table {
+            margin-bottom: 0;
+        }
+
+        .table thead th {
+            background: #f8f9fa;
+            border-bottom: 2px solid #dee2e6;
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .table tbody tr {
+            transition: all 0.2s;
+        }
+
+        .table tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .badge-role {
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+        }
+
+        .badge-admin {
+            background: var(--warning);
             color: #000;
         }
-        .role-user {
-            background-color: #17a2b8;
+
+        .badge-user {
+            background: var(--primary);
             color: #fff;
         }
-        .search-form {
-            background-color: #f8f9fa;
+
+        .status-active {
+            color: var(--success);
+        }
+
+        .status-inactive {
+            color: var(--danger);
+        }
+
+        .btn-action {
+            padding: 5px 10px;
+            border-radius: 5px;
+            transition: all 0.2s;
+        }
+
+        .btn-action:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+        }
+
+        .modal-content {
+            border: none;
+            border-radius: 10px;
+        }
+
+        .modal-header {
+            background: #f8f9fa;
+            border-radius: 10px 10px 0 0;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .form-label {
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .pagination .page-link {
+            border: none;
+            color: #495057;
+            padding: 8px 12px;
+            margin: 0 2px;
+            border-radius: 5px;
+        }
+
+        .pagination .page-link:hover {
+            background: #e9ecef;
+        }
+
+        .pagination .page-item.active .page-link {
+            background: var(--primary);
+            color: #fff;
+        }
+
+        .alert {
+            border: none;
             border-radius: 8px;
+        }
+
+        .top-bar {
+            background: #fff;
+            border-radius: 10px;
             padding: 20px;
-            margin-bottom: 20px;
-        }
-        .search-form .form-control {
-            border-radius: 5px;
-        }
-        .search-form .btn {
-            border-radius: 5px;
-        }
-        .search-wrapper {
-            max-width: 600px;
+            margin-bottom: 25px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
         }
     </style>
 </head>
 <body>
-<div class="container-fluid">
-    <div class="row">
+<div class="container-fluid p-0">
+    <div class="row g-0">
         <!-- 侧边栏 -->
-        <nav class="col-md-2 d-md-block sidebar">
-            <div class="position-sticky pt-3">
-                <div class="text-center text-white py-3">
-                    <h5>管理后台</h5>
-                    <p class="mb-0">欢迎, <span th:text="${session.currentUser.usern}">管理员</span></p>
-                </div>
-                <hr class="bg-white">
-                <ul class="nav flex-column">
-                    <li class="nav-item">
-                        <a class="nav-link" href="/admin/dashboard">
-                            <i class="fa fa-dashboard"></i> 仪表板
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link active" href="/admin/users">
-                            <i class="fa fa-users"></i> 客户管理
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/admin/products">
-                            <i class="fa fa-mobile"></i> 商品管理
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/admin/categories">
-                            <i class="fa fa-th-list"></i> 分类管理
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/admin/orders">
-                            <i class="fa fa-shopping-bag"></i> 订单管理
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/admin/reports">
-                            <i class="fa fa-bar-chart"></i> 报表统计
-                        </a>
-                    </li>
-                    <hr class="bg-white">
-                    <li class="nav-item">
-                        <a class="nav-link" href="/">
-                            <i class="fa fa-home"></i> 返回商城
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/user/logout">
-                            <i class="fa fa-sign-out"></i> 退出登录
-                        </a>
-                    </li>
-                </ul>
+        <nav class="col-md-2 sidebar">
+            <div class="user-info text-center text-white">
+                <h5 class="mb-2">管理后台</h5>
+                <small>欢迎, <span th:text="${session.currentUser.usern}">管理员</span></small>
             </div>
+
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    <a class="nav-link" href="/admin/dashboard">
+                        <i class="fas fa-tachometer-alt me-2"></i> 仪表板
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" href="/admin/users">
+                        <i class="fas fa-users me-2"></i> 客户管理
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/admin/products">
+                        <i class="fas fa-mobile-alt me-2"></i> 商品管理
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/admin/categories">
+                        <i class="fas fa-list me-2"></i> 分类管理
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/admin/orders">
+                        <i class="fas fa-shopping-bag me-2"></i> 订单管理
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/admin/reports">
+                        <i class="fas fa-chart-bar me-2"></i> 报表统计
+                    </a>
+                </li>
+            </ul>
+
+            <ul class="nav flex-column mt-auto mb-3">
+                <li class="nav-item">
+                    <a class="nav-link" href="/">
+                        <i class="fas fa-home me-2"></i> 返回商城
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/user/logout">
+                        <i class="fas fa-sign-out-alt me-2"></i> 退出登录
+                    </a>
+                </li>
+            </ul>
         </nav>
 
         <!-- 主内容区 -->
-        <main class="col-md-10 ms-sm-auto px-md-4">
-            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-                <h1 class="h2">客户管理</h1>
-                <div class="btn-toolbar mb-2 mb-md-0">
-                    <button class="btn btn-primary" id="addUserBtn">
-                        <i class="fa fa-plus"></i> 添加用户
-                    </button>
-                </div>
+        <main class="col-md-10 p-4">
+            <!-- 页面标题栏 -->
+            <div class="top-bar d-flex justify-content-between align-items-center mb-4">
+                <h3 class="mb-0">客户管理</h3>
+                <button class="btn btn-primary" id="addUserBtn">
+                    <i class="fas fa-plus me-2"></i>添加用户
+                </button>
             </div>
 
             <!-- 提示信息 -->
             <div id="alertContainer"></div>
 
-            <!-- 简化的查询表单 -->
-            <div class="search-form">
+            <!-- 搜索栏 -->
+            <div class="search-card">
                 <form id="searchForm">
-                    <div class="search-wrapper">
-                        <label for="searchKeyword" class="form-label">搜索用户</label>
-                        <div class="input-group">
-                            <input type="text" class="form-control" id="searchKeyword" name="keyword"
-                                   placeholder="输入用户名、邮箱、手机号或真实姓名进行搜索...">
-                            <button type="button" class="btn btn-primary" id="searchBtn">
-                                <i class="fa fa-search"></i> 搜索
-                            </button>
-                            <button type="button" class="btn btn-secondary" id="resetBtn">
-                                <i class="fa fa-refresh"></i> 重置
-                            </button>
-                            <button type="button" class="btn btn-success" id="exportBtn">
-                                <i class="fa fa-download"></i> 导出
-                            </button>
+                    <div class="row g-3 align-items-end">
+                        <div class="col-md-8">
+                            <label for="searchKeyword" class="form-label">搜索用户</label>
+                            <input type="text" class="form-control" id="searchKeyword"
+                                   placeholder="输入用户名、邮箱、手机号或真实姓名...">
                         </div>
-                        <div class="form-text">支持模糊搜索，可以输入部分关键字进行查询</div>
+                        <div class="col-md-4">
+                            <div class="d-flex gap-2">
+                                <button type="button" class="btn btn-primary flex-fill" id="searchBtn">
+                                    <i class="fas fa-search me-1"></i>搜索
+                                </button>
+                                <button type="button" class="btn btn-secondary" id="resetBtn">
+                                    <i class="fas fa-redo me-1"></i>重置
+                                </button>
+                                <button type="button" class="btn btn-success" id="exportBtn">
+                                    <i class="fas fa-download me-1"></i>导出
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </form>
             </div>
 
             <!-- 用户列表 -->
-            <div class="card">
-                <div class="card-header">
+            <div class="main-card">
+                <div class="card-header border-0 bg-transparent py-3">
                     <div class="d-flex justify-content-between align-items-center">
-                        <h6 class="mb-0">用户列表</h6>
-                        <span class="badge bg-info" id="totalCount">共 <span th:text="${totalCount}">0</span> 条记录</span>
+                        <h5 class="mb-0">用户列表</h5>
+                        <span class="badge bg-info" id="totalCount">
+                            共 <span th:text="${totalCount}">0</span> 条记录
+                        </span>
                     </div>
                 </div>
-                <div class="card-body">
+
+                <div class="table-container">
                     <div class="table-responsive">
-                        <table class="table table-hover" id="userTable">
+                        <table class="table table-hover align-middle" id="userTable">
                             <thead>
                             <tr>
-                                <th>ID</th>
+                                <th width="60">ID</th>
                                 <th>用户名</th>
                                 <th>邮箱</th>
                                 <th>手机号</th>
                                 <th>真实姓名</th>
                                 <th>余额</th>
-                                <th>角色</th>
-                                <th>状态</th>
+                                <th width="80">角色</th>
+                                <th width="80">状态</th>
                                 <th>注册时间</th>
-                                <th>操作</th>
+                                <th width="100">操作</th>
                             </tr>
                             </thead>
                             <tbody>
                             <tr th:each="user : ${users}">
                                 <td th:text="${user.id}">1</td>
-                                <td th:text="${user.usern}">用户名</td>
+                                <td>
+                                    <strong th:text="${user.usern}">用户名</strong>
+                                </td>
                                 <td th:text="${user.email}">邮箱</td>
                                 <td th:text="${user.phone}">手机号</td>
                                 <td th:text="${user.realN}">真实姓名</td>
-                                <td>￥<span th:text="${#numbers.formatDecimal(user.balance, 1, 2)}">0.00</span></td>
                                 <td>
-                                    <span class="badge"
-                                          th:classappend="${user.role == 'ADMIN' ? 'role-admin' : 'role-user'}"
+                                    <strong>¥<span th:text="${#numbers.formatDecimal(user.balance, 1, 2)}">0.00</span></strong>
+                                </td>
+                                <td>
+                                    <span class="badge badge-role"
+                                          th:classappend="${user.role == 'ADMIN' ? 'badge-admin' : 'badge-user'}"
                                           th:text="${user.role}">USER</span>
                                 </td>
                                 <td>
                                     <span th:classappend="${user.status == 1 ? 'status-active' : 'status-inactive'}">
-                                        <i class="fa" th:classappend="${user.status == 1 ? 'fa-check-circle' : 'fa-times-circle'}"></i>
+                                        <i class="fas" th:classappend="${user.status == 1 ? 'fa-check-circle' : 'fa-times-circle'}"></i>
                                         <span th:text="${user.status == 1 ? '正常' : '禁用'}">正常</span>
                                     </span>
                                 </td>
                                 <td th:text="${#dates.format(user.createTime, 'yyyy-MM-dd')}">2025-01-14</td>
                                 <td>
-                                    <button class="btn btn-sm btn-primary edit-btn"
-                                            th:data-id="${user.id}">
-                                        <i class="fa fa-edit"></i>
+                                    <button class="btn btn-sm btn-primary btn-action edit-btn"
+                                            th:data-id="${user.id}" title="编辑">
+                                        <i class="fas fa-edit"></i>
                                     </button>
-                                    <button class="btn btn-sm btn-danger delete-btn"
+                                    <button class="btn btn-sm btn-danger btn-action delete-btn"
                                             th:data-id="${user.id}"
-                                            th:data-name="${user.usern}">
-                                        <i class="fa fa-trash"></i>
+                                            th:data-name="${user.usern}" title="删除">
+                                        <i class="fas fa-trash"></i>
                                     </button>
                                 </td>
                             </tr>
@@ -207,21 +331,22 @@
                         </table>
                     </div>
 
-                    <div th:if="${users.isEmpty()}" class="text-center py-4">
+                    <div th:if="${users.isEmpty()}" class="text-center py-5">
+                        <i class="fas fa-users fa-3x text-muted mb-3"></i>
                         <p class="text-muted">暂无用户数据</p>
                     </div>
 
                     <!-- 分页 -->
-                    <div class="d-flex justify-content-between align-items-center mt-3" th:if="${!users.isEmpty()}">
-                        <div class="text-muted">
-                            显示第 <span id="currentStart">1</span> 到 <span id="currentEnd">10</span> 条记录，
-                            共 <span id="totalRecords" th:text="${totalCount}">0</span> 条
+                    <div class="card-footer bg-transparent border-0" th:if="${!users.isEmpty()}">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="text-muted">
+                                显示第 <span id="currentStart">1</span> 到 <span id="currentEnd">10</span> 条，
+                                共 <span id="totalRecords" th:text="${totalCount}">0</span> 条
+                            </div>
+                            <nav>
+                                <ul class="pagination mb-0" id="pagination"></ul>
+                            </nav>
                         </div>
-                        <nav aria-label="用户分页">
-                            <ul class="pagination mb-0" id="pagination">
-                                <!-- 分页按钮将通过JavaScript动态生成 -->
-                            </ul>
-                        </nav>
                     </div>
                 </div>
             </div>
@@ -241,71 +366,48 @@
                 <form id="userForm">
                     <input type="hidden" id="userId" name="id">
 
-                    <div class="row">
+                    <div class="row g-3">
                         <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="usern" class="form-label">用户名 <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="usern" name="usern" required>
-                            </div>
+                            <label for="usern" class="form-label">用户名 <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="usern" name="usern" required>
                         </div>
                         <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="password" class="form-label">密码 <span class="text-danger">*</span></label>
-                                <input type="password" class="form-control" id="password" name="password" required>
-                                <div class="form-text" id="passwordHelp" style="display: none;">留空则不修改密码</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="email" class="form-label">邮箱 <span class="text-danger">*</span></label>
-                                <input type="email" class="form-control" id="email" name="email" required>
-                            </div>
+                            <label for="password" class="form-label">密码 <span class="text-danger">*</span></label>
+                            <input type="password" class="form-control" id="password" name="password" required>
+                            <small class="form-text text-muted" id="passwordHelp" style="display: none;">
+                                留空则不修改密码
+                            </small>
                         </div>
                         <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="phone" class="form-label">手机号</label>
-                                <input type="tel" class="form-control" id="phone" name="phone">
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="realN" class="form-label">真实姓名</label>
-                                <input type="text" class="form-control" id="realN" name="realN">
-                            </div>
+                            <label for="email" class="form-label">邮箱 <span class="text-danger">*</span></label>
+                            <input type="email" class="form-control" id="email" name="email" required>
                         </div>
                         <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="balance" class="form-label">余额</label>
-                                <input type="number" class="form-control" id="balance" name="balance"
-                                       value="0" min="0" step="0.01">
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="role" class="form-label">角色</label>
-                                <select class="form-select" id="role" name="role">
-                                    <option value="USER">普通用户</option>
-                                    <option value="ADMIN">管理员</option>
-                                </select>
-                            </div>
+                            <label for="phone" class="form-label">手机号</label>
+                            <input type="tel" class="form-control" id="phone" name="phone">
                         </div>
                         <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="status" class="form-label">状态</label>
-                                <select class="form-select" id="status" name="status">
-                                    <option value="1">正常</option>
-                                    <option value="0">禁用</option>
-                                </select>
-                            </div>
+                            <label for="realN" class="form-label">真实姓名</label>
+                            <input type="text" class="form-control" id="realN" name="realN">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="balance" class="form-label">余额</label>
+                            <input type="number" class="form-control" id="balance" name="balance"
+                                   value="0" min="0" step="0.01">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="role" class="form-label">角色</label>
+                            <select class="form-select" id="role" name="role">
+                                <option value="USER">普通用户</option>
+                                <option value="ADMIN">管理员</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="status" class="form-label">状态</label>
+                            <select class="form-select" id="status" name="status">
+                                <option value="1">正常</option>
+                                <option value="0">禁用</option>
+                            </select>
                         </div>
                     </div>
                 </form>
@@ -327,7 +429,11 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <p>确定要删除用户 <strong id="deleteUserName"></strong> 吗？</p>
+                <div class="text-center py-3">
+                    <i class="fas fa-exclamation-triangle fa-3x text-warning mb-3"></i>
+                    <p>确定要删除用户 <strong id="deleteUserName"></strong> 吗？</p>
+                    <p class="text-muted">此操作不可恢复</p>
+                </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
@@ -348,18 +454,23 @@
 
         // 显示提示信息
         function showAlert(message, type = 'success') {
+            const icons = {
+                success: 'fa-check-circle',
+                danger: 'fa-times-circle',
+                warning: 'fa-exclamation-circle',
+                info: 'fa-info-circle'
+            };
+
             const alertHtml = `
-            <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+            <div class="alert alert-${type} alert-dismissible fade show d-flex align-items-center" role="alert">
+                <i class="fas ${icons[type]} me-2"></i>
                 ${message}
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
         `;
             $('#alertContainer').html(alertHtml);
 
-            // 3秒后自动关闭提示
-            setTimeout(() => {
-                $('.alert').alert('close');
-            }, 3000);
+            setTimeout(() => $('.alert').alert('close'), 3000);
         }
 
         // 加载用户数据
@@ -367,16 +478,10 @@
             currentPage = page;
             const keyword = $('#searchKeyword').val().trim();
 
-            const requestData = {
-                keyword: keyword,
-                page: page,
-                size: pageSize
-            };
-
             $.ajax({
                 url: '/admin/users/search',
                 type: 'POST',
-                data: requestData,
+                data: { keyword: keyword, page: page, size: pageSize },
                 success: function(response) {
                     if (response.success) {
                         updateUserTable(response.data.users);
@@ -398,41 +503,48 @@
             tbody.empty();
 
             if (users.length === 0) {
-                tbody.html('<tr><td colspan="10" class="text-center text-muted">暂无用户数据</td></tr>');
+                tbody.html(`
+                <tr>
+                    <td colspan="10" class="text-center py-5">
+                        <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                        <p class="text-muted mb-0">暂无用户数据</p>
+                    </td>
+                </tr>
+            `);
                 return;
             }
 
             users.forEach(user => {
-                const roleClass = user.role === 'ADMIN' ? 'role-admin' : 'role-user';
+                const roleClass = user.role === 'ADMIN' ? 'badge-admin' : 'badge-user';
                 const statusClass = user.status === 1 ? 'status-active' : 'status-inactive';
                 const statusIcon = user.status === 1 ? 'fa-check-circle' : 'fa-times-circle';
                 const statusText = user.status === 1 ? '正常' : '禁用';
 
                 const row = `
-                    <tr>
-                        <td>${user.id}</td>
-                        <td>${user.usern}</td>
-                        <td>${user.email}</td>
-                        <td>${user.phone || '-'}</td>
-                        <td>${user.realN || '-'}</td>
-                        <td>￥${user.balance.toFixed(2)}</td>
-                        <td><span class="badge ${roleClass}">${user.role}</span></td>
-                        <td><span class="${statusClass}"><i class="fa ${statusIcon}"></i> ${statusText}</span></td>
-                        <td>${new Date(user.createTime).toLocaleDateString()}</td>
-                        <td>
-                            <button class="btn btn-sm btn-primary edit-btn" data-id="${user.id}">
-                                <i class="fa fa-edit"></i>
-                            </button>
-                            <button class="btn btn-sm btn-danger delete-btn" data-id="${user.id}" data-name="${user.usern}">
-                                <i class="fa fa-trash"></i>
-                            </button>
-                        </td>
-                    </tr>
-                `;
+                <tr>
+                    <td>${user.id}</td>
+                    <td><strong>${user.usern}</strong></td>
+                    <td>${user.email}</td>
+                    <td>${user.phone || '-'}</td>
+                    <td>${user.realN || '-'}</td>
+                    <td><strong>¥${user.balance.toFixed(2)}</strong></td>
+                    <td><span class="badge badge-role ${roleClass}">${user.role}</span></td>
+                    <td><span class="${statusClass}"><i class="fas ${statusIcon}"></i> ${statusText}</span></td>
+                    <td>${new Date(user.createTime).toLocaleDateString()}</td>
+                    <td>
+                        <button class="btn btn-sm btn-primary btn-action edit-btn" data-id="${user.id}" title="编辑">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-sm btn-danger btn-action delete-btn"
+                                data-id="${user.id}" data-name="${user.usern}" title="删除">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `;
                 tbody.append(row);
             });
 
-            // 重新绑定事件
             bindTableEvents();
         }
 
@@ -446,10 +558,12 @@
             // 上一页
             if (currentPage > 1) {
                 pagination.append(`
-                    <li class="page-item">
-                        <a class="page-link" href="#" data-page="${currentPage - 1}">上一页</a>
-                    </li>
-                `);
+                <li class="page-item">
+                    <a class="page-link" href="#" data-page="${currentPage - 1}">
+                        <i class="fas fa-chevron-left"></i>
+                    </a>
+                </li>
+            `);
             }
 
             // 页码
@@ -459,26 +573,27 @@
             for (let i = startPage; i <= endPage; i++) {
                 const activeClass = i === currentPage ? 'active' : '';
                 pagination.append(`
-                    <li class="page-item ${activeClass}">
-                        <a class="page-link" href="#" data-page="${i}">${i}</a>
-                    </li>
-                `);
+                <li class="page-item ${activeClass}">
+                    <a class="page-link" href="#" data-page="${i}">${i}</a>
+                </li>
+            `);
             }
 
             // 下一页
             if (currentPage < totalPages) {
                 pagination.append(`
-                    <li class="page-item">
-                        <a class="page-link" href="#" data-page="${currentPage + 1}">下一页</a>
-                    </li>
-                `);
+                <li class="page-item">
+                    <a class="page-link" href="#" data-page="${currentPage + 1}">
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                </li>
+            `);
             }
 
             // 绑定分页事件
             pagination.find('.page-link').click(function(e) {
                 e.preventDefault();
-                const page = parseInt($(this).data('page'));
-                loadUsers(page);
+                loadUsers(parseInt($(this).data('page')));
             });
 
             // 更新显示信息
@@ -491,7 +606,6 @@
 
         // 绑定表格事件
         function bindTableEvents() {
-            // 编辑用户
             $('.edit-btn').click(function() {
                 const userId = $(this).data('id');
                 isEdit = true;
@@ -500,7 +614,6 @@
                 $('#password').attr('required', false);
                 $('#passwordHelp').show();
 
-                // 获取用户信息
                 $.get('/admin/users/get/' + userId, function(response) {
                     if (response.success) {
                         const user = response.data;
@@ -517,50 +630,35 @@
                     } else {
                         showAlert(response.message || '获取用户信息失败', 'danger');
                     }
-                }).fail(function() {
-                    showAlert('请求失败，请重试', 'danger');
                 });
             });
 
-            // 删除用户
             $('.delete-btn').click(function() {
-                const userId = $(this).data('id');
-                const userName = $(this).data('name');
-
-                currentUserId = userId;
-                $('#deleteUserName').text(userName);
+                currentUserId = $(this).data('id');
+                $('#deleteUserName').text($(this).data('name'));
                 $('#deleteModal').modal('show');
             });
         }
 
-        // 搜索按钮点击事件
-        $('#searchBtn').click(function() {
-            loadUsers(1);
-        });
-
-        // 重置按钮点击事件
-        $('#resetBtn').click(function() {
+        // 事件绑定
+        $('#searchBtn').click(() => loadUsers(1));
+        $('#resetBtn').click(() => {
             $('#searchKeyword').val('');
             loadUsers(1);
         });
 
-        // 导出按钮点击事件
-        $('#exportBtn').click(function() {
+        $('#exportBtn').click(() => {
             const keyword = $('#searchKeyword').val().trim();
-
-            // 创建一个隐藏的表单用于导出
             const exportForm = $('<form method="post" action="/admin/users/export"></form>');
             if (keyword) {
                 exportForm.append(`<input type="hidden" name="keyword" value="${keyword}">`);
             }
-
             $('body').append(exportForm);
             exportForm.submit();
             exportForm.remove();
         });
 
-        // 添加用户按钮点击事件
-        $('#addUserBtn').click(function() {
+        $('#addUserBtn').click(() => {
             isEdit = false;
             currentUserId = null;
             $('#userModalTitle').text('添加用户');
@@ -571,11 +669,7 @@
             $('#userModal').modal('show');
         });
 
-        // 保存用户按钮点击事件
-        $('#saveUserBtn').click(function() {
-            const formData = new FormData($('#userForm')[0]);
-
-            // 验证必填字段
+        $('#saveUserBtn').click(() => {
             if (!$('#usern').val().trim()) {
                 showAlert('用户名不能为空', 'danger');
                 return;
@@ -591,6 +685,7 @@
                 return;
             }
 
+            const formData = new FormData($('#userForm')[0]);
             const url = isEdit ? '/admin/users/update' : '/admin/users/add';
 
             $.ajax({
@@ -603,20 +698,16 @@
                     if (response.success) {
                         showAlert(response.message || '操作成功', 'success');
                         $('#userModal').modal('hide');
-                        // 重新加载当前页数据
                         loadUsers(currentPage);
                     } else {
                         showAlert(response.message || '操作失败', 'danger');
                     }
                 },
-                error: function() {
-                    showAlert('请求失败，请重试', 'danger');
-                }
+                error: () => showAlert('请求失败，请重试', 'danger')
             });
         });
 
-        // 确认删除按钮点击事件
-        $('#confirmDeleteBtn').click(function() {
+        $('#confirmDeleteBtn').click(() => {
             if (!currentUserId) return;
 
             $.ajax({
@@ -626,27 +717,22 @@
                     if (response.success) {
                         showAlert(response.message || '删除成功', 'success');
                         $('#deleteModal').modal('hide');
-                        // 重新加载当前页数据
                         loadUsers(currentPage);
                     } else {
                         showAlert(response.message || '删除失败', 'danger');
                     }
                 },
-                error: function() {
-                    showAlert('请求失败，请重试', 'danger');
-                }
+                error: () => showAlert('请求失败，请重试', 'danger')
             });
         });
 
-        // 模态框关闭时重置表单
-        $('#userModal').on('hidden.bs.modal', function() {
+        $('#userModal').on('hidden.bs.modal', () => {
             $('#userForm')[0].reset();
             $('#userId').val('');
             isEdit = false;
             currentUserId = null;
         });
 
-        // 回车键搜索
         $('#searchKeyword').keypress(function(e) {
             if (e.which === 13) {
                 e.preventDefault();
@@ -654,7 +740,7 @@
             }
         });
 
-        // 初始化加载数据
+        // 初始化
         bindTableEvents();
         loadUsers(1);
     });
