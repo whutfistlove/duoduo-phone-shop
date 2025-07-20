@@ -1,5 +1,6 @@
 package com.duoduo.phoneshop.controller;
 
+import com.duoduo.phoneshop.config.AppConfig;
 import com.duoduo.phoneshop.entity.*;
 import com.duoduo.phoneshop.service.*;
 import lombok.extern.slf4j.Slf4j;
@@ -454,10 +455,15 @@ public class AdminController {
 
         List<Category> categories = categoryService.getAllCategories();
         model.addAttribute("categories", categories);
-
+//        Product product = productService.getProductById();
+//        List<Category> categories = categoryService.getAllCategories();
+//
+//        model.addAttribute("product", product);
+//        model.addAttribute("categories", categories);
         return "admin/product-add";
     }
-
+    @Autowired
+    private AppConfig appConfig;
     /**
      * 添加商品
      */
@@ -474,17 +480,27 @@ public class AdminController {
         try {
             // 处理图片上传
             if (!imageFile.isEmpty()) {
-                String fileName = UUID.randomUUID().toString() + "_" + imageFile.getOriginalFilename();
-                String uploadDir = "upload/products/";
+                // 为上传的文件生成唯一的文件名
+                String fileName = imageFile.getOriginalFilename();
+
+                // 目标目录路径，存放在项目根目录的 uploads/images 目录下
+                String uploadDir = System.getProperty("user.dir") + "/src/main/resources/static/images/";
+
+                // 创建目录，如果不存在则创建
                 File uploadDirFile = new File(uploadDir);
                 if (!uploadDirFile.exists()) {
                     uploadDirFile.mkdirs();
                 }
 
+                // 目标文件路径
                 File uploadFile = new File(uploadDir + fileName);
+                // 将上传的文件保存到目标路径
                 imageFile.transferTo(uploadFile);
-                product.setImage("/upload/products/" + fileName);
+
+                // 将图片的相对路径存储到数据库
+                product.setImage("/images/" + fileName);
             }
+
 
             if (productService.addProduct(product)) {
                 redirectAttributes.addFlashAttribute("success", "商品添加成功");
@@ -534,16 +550,20 @@ public class AdminController {
         try {
             // 处理图片上传
             if (imageFile != null && !imageFile.isEmpty()) {
-                String fileName = UUID.randomUUID().toString() + "_" + imageFile.getOriginalFilename();
-                String uploadDir = "upload/products/";
+                String fileName =    imageFile.getOriginalFilename();
+                String uploadDir = System.getProperty("user.dir") + "/src/main/resources/static/images/";
                 File uploadDirFile = new File(uploadDir);
                 if (!uploadDirFile.exists()) {
                     uploadDirFile.mkdirs();
                 }
 
+                // 目标文件路径
                 File uploadFile = new File(uploadDir + fileName);
+                // 将上传的文件保存到目标路径
                 imageFile.transferTo(uploadFile);
-                product.setImage("/upload/products/" + fileName);
+
+                // 将图片的相对路径存储到数据库
+                product.setImage("/images/" + fileName);
             }
 
             if (productService.updateProduct(product)) {
