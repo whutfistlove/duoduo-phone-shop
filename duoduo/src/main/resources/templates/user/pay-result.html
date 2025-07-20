@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>支付结果 - 多多手机商城</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f5f5f5;
+        }
+        .result-container {
+            max-width: 600px;
+            margin: 50px auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 40px;
+            text-align: center;
+        }
+        .result-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+        }
+        .success-icon {
+            background-color: #d4edda;
+            color: #28a745;
+        }
+        .error-icon {
+            background-color: #f8d7da;
+            color: #dc3545;
+        }
+        .result-title {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+        .result-info {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: left;
+        }
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .info-row:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+        .info-label {
+            color: #6c757d;
+        }
+        .action-buttons {
+            margin-top: 30px;
+        }
+        .action-buttons .btn {
+            margin: 0 10px;
+            min-width: 120px;
+        }
+        .countdown {
+            color: #6c757d;
+            font-size: 14px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+<div class="result-container">
+    <!-- 成功状态 -->
+    <div th:if="${success}">
+        <div class="result-icon success-icon">
+            <i class="fa fa-check"></i>
+        </div>
+        <h3 class="result-title text-success">支付成功！</h3>
+        <p class="text-muted">您的支付已成功完成</p>
+
+        <div class="result-info">
+            <div class="info-row">
+                <span class="info-label">交易单号：</span>
+                <span th:text="${outTradeNo}">-</span>
+            </div>
+            <div class="info-row" th:if="${tradeNo}">
+                <span class="info-label">支付宝交易号：</span>
+                <span th:text="${tradeNo}">-</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">支付金额：</span>
+                <span class="text-danger">￥<span th:text="${totalAmount}">0.00</span></span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">支付方式：</span>
+                <span>支付宝</span>
+            </div>
+        </div>
+
+        <!-- 根据类型显示不同的操作按钮 -->
+        <div class="action-buttons">
+            <!-- 充值成功 -->
+            <div th:if="${type == 'recharge'}">
+                <a href="/user/profile" class="btn btn-primary">
+                    <i class="fa fa-user"></i> 查看余额
+                </a>
+                <a href="/" class="btn btn-outline-secondary">
+                    <i class="fa fa-shopping-bag"></i> 去购物
+                </a>
+            </div>
+            <!-- 订单支付成功 -->
+            <div th:if="${type == 'order'}">
+                <a href="/order/list" class="btn btn-primary">
+                    <i class="fa fa-list"></i> 查看订单
+                </a>
+                <a href="/" class="btn btn-outline-secondary">
+                    <i class="fa fa-home"></i> 返回首页
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- 失败状态 -->
+    <div th:unless="${success}">
+        <div class="result-icon error-icon">
+            <i class="fa fa-times"></i>
+        </div>
+        <h3 class="result-title text-danger">支付失败</h3>
+        <p class="text-muted" th:text="${message} ?: '支付过程中出现错误，请重试'">支付过程中出现错误，请重试</p>
+
+        <div class="action-buttons">
+            <a href="/user/recharge" class="btn btn-primary">
+                <i class="fa fa-refresh"></i> 重新支付
+            </a>
+            <a href="/" class="btn btn-outline-secondary">
+                <i class="fa fa-home"></i> 返回首页
+            </a>
+        </div>
+    </div>
+
+    <div class="countdown">
+        页面将在 <span id="countdown">5</span> 秒后自动跳转...
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
+<script th:inline="javascript">
+    $(document).ready(function() {
+        const success = [[${success}]];
+        const type = [[${type}]];
+
+        // 倒计时跳转
+        let seconds = 5;
+        const countdownInterval = setInterval(function() {
+            seconds--;
+            $('#countdown').text(seconds);
+
+            if (seconds <= 0) {
+                clearInterval(countdownInterval);
+
+                // 根据支付结果和类型跳转到不同页面
+                if (success) {
+                    if (type === 'recharge') {
+                        window.location.href = '/user/profile';
+                    } else if (type === 'order') {
+                        window.location.href = '/order/list';
+                    }
+                } else {
+                    window.location.href = '/';
+                }
+            }
+        }, 1000);
+    });
+</script>
+</body>
+</html>

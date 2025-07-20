@@ -261,4 +261,69 @@ public class UserController {
 
         return "redirect:/user/recharge";
     }
+
+
+    // 修改UserController中的createPayment方法：
+
+    /**
+     * 创建支付订单（支付宝充值）
+     */
+    @PostMapping("/createPayment")
+    public String createPayment(@RequestParam BigDecimal amount,
+                                @RequestParam String payMethod,
+                                HttpSession session,
+                                Model model,
+                                RedirectAttributes redirectAttributes) {
+        User currentUser = (User) session.getAttribute("currentUser");
+        if (currentUser == null) {
+            return "redirect:/user/login";
+        }
+
+        try {
+            // 验证金额
+            if (amount.compareTo(BigDecimal.ONE) < 0 || amount.compareTo(new BigDecimal("10000")) > 0) {
+                redirectAttributes.addFlashAttribute("error", "充值金额必须在1-10000元之间");
+                return "redirect:/user/recharge";
+            }
+
+            // 目前只支持支付宝
+            if ("alipay".equals(payMethod)) {
+                // 跳转到支付宝充值页面
+                return "redirect:/user/alipayRecharge?amount=" + amount;
+            } else if ("wechat".equals(payMethod)) {
+                redirectAttributes.addFlashAttribute("error", "微信支付功能正在开发中，请使用支付宝");
+                return "redirect:/user/recharge";
+            } else if ("bank".equals(payMethod)) {
+                redirectAttributes.addFlashAttribute("error", "银行卡支付功能正在开发中，请使用支付宝");
+                return "redirect:/user/recharge";
+            } else {
+                redirectAttributes.addFlashAttribute("error", "不支持的支付方式");
+                return "redirect:/user/recharge";
+            }
+
+        } catch (Exception e) {
+            log.error("创建支付订单失败", e);
+            redirectAttributes.addFlashAttribute("error", "创建支付订单失败，请重试");
+            return "redirect:/user/recharge";
+        }
+    }
+
+    /**
+     * 支付宝充值页面
+     */
+    @GetMapping("/alipayRecharge")
+    public String alipayRecharge(@RequestParam BigDecimal amount,
+                                 Model model,
+                                 HttpSession session) {
+        User currentUser = (User) session.getAttribute("currentUser");
+        if (currentUser == null) {
+            return "redirect:/user/login";
+        }
+
+        model.addAttribute("amount", amount);
+        model.addAttribute("user", currentUser);
+
+        return "user/alipay-recharge";
+    }
+
 }

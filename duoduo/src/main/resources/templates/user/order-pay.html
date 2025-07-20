@@ -110,6 +110,20 @@
             color: #856404;
             font-weight: 500;
         }
+
+        /* 添加的支付方式选项样式 */
+        .payment-option {
+            padding: 10px 15px;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.2);
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .payment-option:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateX(3px);
+        }
     </style>
 </head>
 <body>
@@ -247,16 +261,67 @@
                     <i class="fa fa-clock-o"></i> 请在 <span id="countdown">30:00</span> 内完成支付
                 </div>
 
-                <!-- 支付表单 -->
-                <form th:action="@{/order/pay}" method="post" id="payForm">
+                <!-- 嵌入的支付方式选择代码 -->
+                <!-- 支付方式选择 -->
+                <div class="payment-method-section mb-3">
+                    <h6 class="mb-3">选择支付方式</h6>
+
+                    <!-- 余额支付 -->
+                    <div class="payment-option mb-2" onclick="selectPaymentMethod('balance')">
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="paymentMethod"
+                                   id="balancePayment" value="balance" checked>
+                            <label class="form-check-label" for="balancePayment" style="width: 100%;">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <i class="fa fa-wallet text-primary"></i>
+                                        <strong class="ms-2">余额支付</strong>
+                                        <span class="text-muted ms-2">（余额：￥<span th:text="${userBalance}"></span>）</span>
+                                    </div>
+                                    <div th:if="${userBalance < order.payAmount}" class="text-danger small">
+                                        余额不足
+                                    </div>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- 支付宝支付 -->
+                    <div class="payment-option" onclick="selectPaymentMethod('alipay')">
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="paymentMethod"
+                                   id="alipayPayment" value="alipay">
+                            <label class="form-check-label" for="alipayPayment" style="width: 100%;">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <i class="fa fa-mobile text-info" style="font-size: 1.2em;"></i>
+                                        <strong class="ms-2">支付宝</strong>
+                                        <span class="text-muted ms-2">安全便捷，即时到账</span>
+                                    </div>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 余额支付表单 -->
+                <form th:action="@{/order/pay}" method="post" id="balancePayForm" style="display: block;">
                     <input type="hidden" name="orderId" th:value="${order.id}">
 
-                    <button type="submit" class="pay-button"
+                    <button type="submit" class="pay-button balance-pay-button"
                             th:disabled="${userBalance < order.payAmount}">
                         <i class="fa fa-check-circle"></i>
-                        确认支付 ￥<span th:text="${order.payAmount}"></span>
+                        余额支付 ￥<span th:text="${order.payAmount}"></span>
                     </button>
                 </form>
+
+                <!-- 支付宝支付按钮 -->
+                <button type="button" class="pay-button alipay-pay-button"
+                        id="alipayPayBtn" style="display: none; background: linear-gradient(135deg, #1677FF 0%, #1E90FF 100%);">
+                    <i class="fa fa-mobile"></i>
+                    支付宝支付 ￥<span th:text="${order.payAmount}"></span>
+                </button>
+                <!-- 嵌入的支付方式选择代码结束 -->
 
                 <div class="text-center mt-3">
                     <a href="/order/list" class="text-white">
@@ -286,6 +351,17 @@
         let timeLeft = 30 * 60; // 30分钟
         const countdownElement = $('#countdown');
 
+        // 初始化支付方式显示
+        selectPaymentMethod('balance');
+
+        // 支付宝支付按钮点击事件
+        $('#alipayPayBtn').on('click', function() {
+            if (confirm('确认使用支付宝支付 ￥' + $(this).find('span').text() + ' 吗？')) {
+                // 这里应跳转到支付宝支付页面，但当前没有具体实现
+                alert('正在跳转到支付宝支付...');
+            }
+        });
+
         const updateCountdown = function() {
             if (timeLeft <= 0) {
                 countdownElement.text('已超时');
@@ -304,14 +380,29 @@
         updateCountdown();
         const countdownInterval = setInterval(updateCountdown, 1000);
 
-        // 支付确认
-        $('#payForm').on('submit', function(e) {
-            if (!confirm('确认支付 ￥' + $(this).find('span').last().text() + ' 吗？')) {
+        // 余额支付表单提交事件
+        $('#balancePayForm').on('submit', function(e) {
+            if (!confirm('确认使用余额支付 ￥' + $(this).find('span').last().text() + ' 吗？')) {
                 e.preventDefault();
                 return false;
             }
         });
     });
+
+    // 选择支付方式
+    function selectPaymentMethod(method) {
+        if (method === 'balance') {
+            $('#balancePayForm').show();
+            $('#alipayPayBtn').hide();
+            $('.balance-pay-button').css('display', 'block');
+            $('.alipay-pay-button').css('display', 'none');
+        } else if (method === 'alipay') {
+            $('#balancePayForm').hide();
+            $('#alipayPayBtn').show();
+            $('.balance-pay-button').css('display', 'none');
+            $('.alipay-pay-button').css('display', 'block');
+        }
+    }
 </script>
 </body>
 </html>

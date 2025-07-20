@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 public class AlipayConfig {
 
     private String appId;
-    private String merchantPrivateKey;
+    private String privateKey;
     private String alipayPublicKey;
     private String notifyUrl;
     private String returnUrl;
@@ -25,12 +25,13 @@ public class AlipayConfig {
         this.appId = appId;
     }
 
-    public String getMerchantPrivateKey() {
-        return merchantPrivateKey;
+    // 关键修改：getter/setter 名改为 privateKey
+    public String getPrivateKey() {
+        return privateKey;
     }
 
-    public void setMerchantPrivateKey(String merchantPrivateKey) {
-        this.merchantPrivateKey = merchantPrivateKey;
+    public void setPrivateKey(String privateKey) {
+        this.privateKey = privateKey;
     }
 
     public String getAlipayPublicKey() {

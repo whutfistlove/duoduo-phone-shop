@@ -295,6 +295,56 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    public Order getOrderByOrderNo(String orderNo) {
+        // 这里需要在OrderMapper中添加对应的方法
+        return orderMapper.selectByOrderNo(orderNo);
+    }
+
+    // 在OrderServiceImpl类中添加以下方法：
+
+    /**
+     * 更新订单支付状态（支付宝支付成功后调用）
+     * @param orderId 订单ID
+     * @param tradeNo 支付宝交易号
+     * @param payMethod 支付方式
+     * @return 是否成功
+     */
+    @Override
+    @Transactional
+    public boolean updateOrderPayStatus(Long orderId, String tradeNo, String payMethod) {
+        try {
+            Order order = orderMapper.selectById(orderId);
+            if (order == null || order.getStatus() != 0) {
+                log.error("订单不存在或状态不正确: orderId={}, status={}", orderId, order != null ? order.getStatus() : null);
+                return false;
+            }
+
+            // 更新订单状态为已支付
+            order.setStatus(1); // 已支付，待发货
+            order.setPayTime(new Date());
+            order.setUpdateTime(new Date());
+
+            int result = orderMapper.update(order);
+
+            if (result > 0) {
+                log.info("订单支付状态更新成功: orderId={}, tradeNo={}", orderId, tradeNo);
+
+                // TODO: 这里可以添加其他业务逻辑，如：
+                // 1. 记录支付日志
+                // 2. 发送订单支付成功通知
+                // 3. 更新商品销量等
+
+                return true;
+            }
+
+            return false;
+        } catch (Exception e) {
+            log.error("更新订单支付状态失败: orderId={}", orderId, e);
+            return false;
+        }
+    }
+
+    @Override
     public BigDecimal getTotalSales() {
         return orderMapper.getTotalSales();
     }

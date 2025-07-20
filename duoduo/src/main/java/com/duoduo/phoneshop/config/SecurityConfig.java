@@ -49,6 +49,12 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                                 "/user/sendCode"
                         ).permitAll()
 
+                        // 支付宝回调接口（重要：必须允许匿名访问）
+                        .antMatchers(
+                                "/alipay/notify",
+                                "/alipay/return"
+                        ).permitAll()
+
                         // 商品浏览相关页面
                         .antMatchers(
                                 "/category/**",
@@ -62,7 +68,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                                 "/cart/**",
                                 "/order/**",
                                 "/address/**",
-                                "/favorite/**"
+                                "/favorite/**",
+                                "/alipay/recharge/create",  // 创建充值订单需要登录
+                                "/alipay/order/create"      // 创建订单支付需要登录
                         ).hasAnyRole("USER", "ADMIN")
 
                         // 管理员页面

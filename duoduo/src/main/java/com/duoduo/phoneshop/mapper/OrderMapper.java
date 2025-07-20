@@ -81,4 +81,11 @@ public interface OrderMapper {
      * @return 订单数
      */
     Integer getMonthOrderCount();
+
+    /**
+     * 根据订单号查询订单
+     * @param orderNo 订单号
+     * @return 订单信息
+     */
+    Order selectByOrderNo(@Param("orderNo") String orderNo);
 }

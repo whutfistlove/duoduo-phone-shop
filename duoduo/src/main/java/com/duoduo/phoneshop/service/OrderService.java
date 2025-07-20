@@ -103,4 +103,20 @@ public interface OrderService {
      * @return 订单数
      */
     Integer getMonthOrderCount();
+
+    /**
+     * 根据订单号查询订单
+     * @param orderNo 订单号
+     * @return 订单信息
+     */
+    Order getOrderByOrderNo(String orderNo);
+
+    /**
+     * 更新订单支付状态（支付宝支付成功后调用）
+     * @param orderId 订单ID
+     * @param tradeNo 支付宝交易号
+     * @param payMethod 支付方式
+     * @return 是否成功
+     */
+    boolean updateOrderPayStatus(Long orderId, String tradeNo, String payMethod);
 }

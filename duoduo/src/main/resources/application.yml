@@ -2,16 +2,26 @@ server:
   port: 8080
   servlet:
     context-path: /
+# ?????
 alipay:
-  appId: 9021000150656933
-  merchantPrivateKey: MIIEvwIBADANBgkqhkiG9w0BAQEFAASCBKkwggSlAgEAAoIBAQCgrWiXqQ7VcWQiAgq3A9uWwwXpZfOZRIfhhZZF3wQpEn1D4gC/vjHKhkmkcCGBDR8SoZ7piBr2XN6y5dLz2lRKmYQ3lTP0/W5uB+dNmZvyD+Mu0ky5m0GniEcyWzpg+7rg4hrLz5VPzQqf/WzsdVQsIz47eaDjNmzyLMSTN3qmldAmmA7atMQSrGlWTPDMOPlWh2iTr9Rz7fb088GEF3bbvNOWCjuAQ0gkSVDU19veynfFRBCelwj1Iepxao7JGVey1yruzxnLEEyHXaY15OY7OnQG0BodXmX53ea37deNUtQaPgZXgyiYXNILRmpzzQO6Op9Ox4epqLQfr6DyE9S7AgMBAAECggEAN2LvPfAxw9O9f5eSl/nFdReu7wCM0xVzfYLuBRHWPk44TfEW7wGh6j0WH4/jjLe4MVTzEW8wVCI5RhPA/vwQuFJo6DwPV/EQYu9ohTBhODTPzDED76scG6L3X91gp1O+3Iw0TnM09fgpJHNYW74qELjpV9kaY5g8P9K8xD6IkeleyMMayNarY8OjtpG9sKvHmVEB9OamIvZD7ImtiRTeNBvSiqHtEwstdFcDFNxR/ibY7Dr62cZHdwjoLX7avAwel5yU2wU0OUCfL/py+9cZKG3C1dmYbghBWQtx9UAMsgxsh2eSib8VJDlSwBAGXaIOlAE/sQX5kct8OhUjCcIysQKBgQDvHVMUL+Y/+grvRsnbIBfw+9v/hdXTeCYBIuMjeNaOdihnquT0MRog8xpQ8HBca45p+O+MMjEMBXrQeVf3F9tY8celqzCY1gxy0uXdhfGrVdDC+YHfLz/mAtlT1F9QDCuXKsHmSK5Xb9T1TEIBIgcXLdso2eEY1JhNFJfoVrCNqQKBgQCsBhvtvPSQ60etUu6WgCffwxYqYM5PEKZldCxEN+WXfKmjkIezJ9vUX1VUreSgejeFMM/GIPuZ230uokoYBDR6+l1DhUxmqWvfaNHoRwm8Po0FiToULdqD5MmAFNEPTjExOF7sZz9ZlITWQonRSz27+pnHxYfccuURo6xWljqlwwKBgQCLRL4txNRLsPwLb2SEb0Xigx8Yzb/D4nfoM4SuFWSKJ0HTV5Lws2SvikhqmhAnlDGngWksc9NjWBG3OOXGMiv8ux34XSP58LnhavqdMrWWgG4OEbrV3jROaJxiGhDFk8ET08CJuw1oOeeEU70h4crVckzylyxnBPQL+RGdLli4uQKBgQCMbRRBd12CK77AW5HOo+FpBX1DrPDdlC7xZOt56NNwXWCx2BsegewvKn+i961J31sRTC5gg65AA+/lsK+heVVKCrU1mEwtBiK8JnosDkmBNOKz4TjbHi9iOdLPzq52uxLnJig+/W22d8oUig6tHqnPmRwN+08UA2rBgoX9zPclNwKBgQDEq4DZgFCTNxItIfct1nprsgGvg7cTS+tsRXy3FkX5dg/yhiH5e3aHhKySQnT5gVBSO+EJoGo+b2GYlwKrYWggqEFIH1XiCxm4j5HD6NLlWc6PkS215/bPmdv7fVzbnko9FIaAFXLtZ0Clgz0DSG4tesi2rR0xqeQ7/Lf/AwcFHA==
-  alipayPublicKey: MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAoK1ol6kO1XFkIgIKtwPblsMF6WXzmUSH4YWWRd8EKRJ9Q+IAv74xyoZJpHAhgQ0fEqGe6Yga9lzesuXS89pUSpmEN5Uz9P1ubgfnTZmb8g/jLtJMuZtBp4hHMls6YPu64OIay8+VT80Kn/1s7HVULCM+O3mg4zZs8izEkzd6ppXQJpgO2rTEEqxpVkzwzDj5Vodok6/Uc+329PPBhBd227zTlgo7gENIJElQ1Nfb3sp3xUQQnpcI9SHqcWqOyRlXstcq7s8ZyxBMh12mNeTmOzp0BtAaHV5l+d3mt+3XjVLUGj4GV4MomFzSC0Zqc80DujqfTseHqai0H6+g8hPUuwIDAQAB
-  notifyUrl: http:// 127.0.0.1:8080/api/alipay/notify
-  returnUrl: http://localhost:8080/user/recharge
+  # ??ID
+  appId: 9021000150661092
+  # ?????????????????
+  privateKey: MIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQCMLpH80VKJXJAnDHbeWgBNakKUFkzfEQdqFvlQSRJZq7Ngb2bLMx8GFteW+/AqwaZiqZ0KBTdc1al0HDbwjeOHGHnHicF5p2a78HZ2gZkSSHSx5KXE2aVUJX38bRxgEXYglIaFPRGGAnMmaOdSC0f21a+r8yKJv7+84swS9mAK5Vxy3PeBXR42mI5MRyqUxjTfO2+AzMTzzPGgyh44Go6xf8UlPStSjcahaOj0Fr8cr1NJCLUeb011y4R83wNvcSJ3LT0tsjxhUdNpAuLLWg5pCEEOL022czSWr7uO35Ywbl7UFhE2sTbcIBlOug7V7gm9ZKweEJEWvx7Vpq4YEFW1AgMBAAECggEAXETXAKLDAfj0RU+V+jshUdNsaU7YYEc0KydeCPNf6bfzhLku3vcSJ47nbtD7vxjhrLVZ0VunmipktDFSFDpAlg6NMcLBn5KJM5FOWChrmbYpYWJPnmdnxCA9ceZbs/wqVb2NYavVmfCI3LJV+BHG13jFfZe2lxaoXOqnSp/yjZh6TMvN0xYjFUIIktqhVyzGFrbluN5zcxvmLLoU5NeSZvf7nz8CQ4H7mPtU3Ch5Whrj5tqX7JVyVLo4aG0D6nC41kct+ZVItKp96Neip3e1VWWI6vMlbMSp6VOQfAPi+YTOpi8nLHMlMquALZMuDFLA2mHhdzqRc3jCbGC13o/UTQKBgQDO4PTUkmyNRJPWLjrO/Dc/REIuBr92hGiHIl/RaiFPgzrRPqRz103xHPS1uLA0WbvmrDY6k1KjkNjOR6ogygqJzjapgjVw9EioqjULTrfKuY5RpovzOZLd7MeDm/ua2jesg12kQb0f/wZiV9S9Q/l6gyqGGhfTm3jylYjPoKR7hwKBgQCtd3k6MpOL7CFxjk47AR5/Xil+0WbsL1CEAkAbfp6cyJ6b3yyxRVOHwb2hL16CcBQ2eRG/oftMySEjHYyAX2eP4HgfDQPMdvsiW5eq/qP7DS8iRGp99ZRIaK1j4o5vU2PdF4GcmJj+3wr32kn6L7cnQLcYl0GAAUaTuBPWjdgL4wKBgH9FSZmU0w89hy2WlztLUrmrRoOGRzekUaIA9a2hewitlPuxa/6QEDUrOSiqjExIgB5zB5GVnJtfuuF8mR8+7KjGoj46CqKIxkJtI+Dm9o7TBMkairKBUucQidVfmrQzV1jcIDmy76TFganymsAtF0fVdc22M75MwWWLtPT2wPn1AoGAcyt3mWQrAiNssPBCkHpVvUrPUhvFsdpYIs07swWGWaH5bJPoIGpe4yuGs5W3sfKn+OK5Hfp11q1TCvV7a1/samImXrdNZls4sb8OG8GlLfG68Y1rBuYd5VVaiY7J8q/zBb+tlkLakZ2UsqqDo1A60hztc645FrvCGCGHSlQytPECgYAfxSTnVR2zAB2ez/DhvKSkrGWSplJ+1nF/bR3R3NReYNmGbSwRJutvZO+UHEDzNo5oXLpbRPrVv4xHKRMBG6VB1yeCLavi8VYROWotYSP2QYeYbLiQ7L1+aQHCwQxpjXfMMQl53J+dudYBtK3fzBk2jVzXdpZSLQWpa3pLYqKDSQ==
+  # ??????????????????
+  alipayPublicKey: MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAwhYSKaRIFnV2ByEic38Qiqyz9XvA3p1Ky4c6EQmQ6F8xOGJHZ7Xixx4LM10MftsWT0oNNPWaLDZp43Lo9IDaHmx/8bpxoaSOCxOSQ6Y97bkDNoIUwjpJUa89Jn1DlPJ1A78MJTuoCXhjRo3iUKyMGM6MS07OpBKbQVwFaxIkXqr9tK1KY8gnxSOKNsQ0OT8rQLNnQNw1H+hGMPjw5panJEwPdMHDZPC6MUgSB7PsDLZcDKQih/aJxgEGJOChwKiMFxVHy1pnyqcZmuMEZ3ts9Vi4jfCE8CP3zYtx3DDQ3yYMXi9G4SsujatO3v77aQ8uO29DmaM7VKa8bwpoLVLlmwIDAQAB
+  # ????????????????????
+  notifyUrl: http://localhost:8080/alipay/notify
+  # ????????????
+  returnUrl: http://localhost:8080/alipay/return
+  # ????
   signType: RSA2
-  charset: utf-8
-  # 我的支付宝网关地址
+  # ??????
+  charset: UTF-8
+  # ???????????
   gatewayUrl: https://openapi-sandbox.dl.alipaydev.com/gateway.do
+  # ??
+  format: JSON
 
 spring:
   application:
@@ -21,7 +31,7 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://localhost:3306/phoneshop?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true
     username: root
-    password: 13477514988
+    password: 123456
     hikari:
       minimum-idle: 5
       maximum-pool-size: 20
