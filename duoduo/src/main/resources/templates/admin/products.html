@@ -5,209 +5,304 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>商品管理 - 管理后台</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
+        :root {
+            --sidebar-bg: #2c3e50;
+            --sidebar-hover: #34495e;
+            --primary: #3498db;
+            --success: #2ecc71;
+            --warning: #f39c12;
+            --danger: #e74c3c;
+        }
+
+        body { background-color: #f8f9fa; }
+
         .sidebar {
             min-height: 100vh;
-            background-color: #343a40;
+            background: var(--sidebar-bg);
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
         }
+
         .sidebar .nav-link {
-            color: #fff;
-            padding: 15px 20px;
+            color: rgba(255,255,255,0.8);
+            padding: 12px 20px;
+            transition: all 0.3s;
+            border-left: 3px solid transparent;
         }
+
         .sidebar .nav-link:hover {
-            background-color: #495057;
+            background: var(--sidebar-hover);
+            color: #fff;
+            border-left-color: var(--primary);
         }
+
         .sidebar .nav-link.active {
-            background-color: #007bff;
+            background: var(--sidebar-hover);
+            color: #fff;
+            border-left-color: var(--primary);
+        }
+
+        .user-info {
+            padding: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .stat-card {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            transition: all 0.3s;
+            overflow: hidden;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: var(--primary);
+        }
+
+        .stat-card.primary::before { background: var(--primary); }
+        .stat-card.success::before { background: var(--success); }
+        .stat-card.warning::before { background: var(--warning); }
+        .stat-card.danger::before { background: var(--danger); }
+
+        .stat-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            opacity: 0.1;
+        }
+
+        .stat-card.primary .stat-icon { background: var(--primary); color: var(--primary); }
+        .stat-card.success .stat-icon { background: var(--success); color: var(--success); }
+        .stat-card.warning .stat-icon { background: var(--warning); color: var(--warning); }
+        .stat-card.danger .stat-icon { background: var(--danger); color: var(--danger); }
+        .table-card {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
         .product-img {
-            width: 50px;
-            height: 50px;
+            width: 40px;
+            height: 40px;
             object-fit: cover;
+            border-radius: 5px;
         }
-        .status-active {
-            color: #28a745;
+        .badge-status {
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-size: 12px;
         }
-        .status-inactive {
-            color: #dc3545;
-        }
-        .stock-low {
-            color: #ffc107;
-        }
-        .stock-out {
-            color: #dc3545;
-        }
-        .search-box {
-            max-width: 400px;
+        .search-bar {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
     </style>
 </head>
 <body>
-<div class="container-fluid">
-    <div class="row">
+<div class="container-fluid p-0">
+    <div class="row g-0">
         <!-- 侧边栏 -->
-        <nav class="col-md-2 d-md-block sidebar">
-            <div class="position-sticky pt-3">
-                <div class="text-center text-white py-3">
-                    <h5>管理后台</h5>
-                    <p class="mb-0">欢迎, <span th:text="${session.currentUser.usern}">管理员</span></p>
-                </div>
-                <hr class="bg-white">
-                <ul class="nav flex-column">
-                    <li class="nav-item">
-                        <a class="nav-link" href="/admin/dashboard">
-                            <i class="fa fa-dashboard"></i> 仪表板
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/admin/users">
-                            <i class="fa fa-users"></i> 客户管理
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link active" href="/admin/products">
-                            <i class="fa fa-mobile"></i> 商品管理
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/admin/categories">
-                            <i class="fa fa-th-list"></i> 分类管理
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/admin/orders">
-                            <i class="fa fa-shopping-bag"></i> 订单管理
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/admin/reports">
-                            <i class="fa fa-bar-chart"></i> 报表统计
-                        </a>
-                    </li>
-                    <hr class="bg-white">
-                    <li class="nav-item">
-                        <a class="nav-link" href="/">
-                            <i class="fa fa-home"></i> 返回商城
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/user/logout">
-                            <i class="fa fa-sign-out"></i> 退出登录
-                        </a>
-                    </li>
-                </ul>
+        <nav class="col-md-2 sidebar">
+            <div class="user-info text-center text-white">
+                <h5 class="mb-2">管理后台</h5>
+                <small>欢迎, <span th:text="${session.currentUser?.usern}">管理员</span></small>
             </div>
+
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    <a class="nav-link" href="/admin/dashboard">
+                        <i class="fas fa-tachometer-alt me-2"></i> 仪表板
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/admin/users">
+                        <i class="fas fa-users me-2"></i> 客户管理
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" href="/admin/products">
+                        <i class="fas fa-mobile-alt me-2"></i> 商品管理
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/admin/categories">
+                        <i class="fas fa-list me-2"></i> 分类管理
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/admin/orders">
+                        <i class="fas fa-shopping-bag me-2"></i> 订单管理
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/admin/reports">
+                        <i class="fas fa-chart-bar me-2"></i> 报表统计
+                    </a>
+                </li>
+            </ul>
+
+            <ul class="nav flex-column mt-auto mb-3">
+                <li class="nav-item">
+                    <a class="nav-link" href="/">
+                        <i class="fas fa-home me-2"></i> 返回商城
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/user/logout">
+                        <i class="fas fa-sign-out-alt me-2"></i> 退出登录
+                    </a>
+                </li>
+            </ul>
         </nav>
 
         <!-- 主内容区 -->
-        <main class="col-md-10 ms-sm-auto px-md-4">
-            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-                <h1 class="h2">商品管理</h1>
-                <div class="btn-toolbar mb-2 mb-md-0">
-                    <a href="/admin/products/add" class="btn btn-primary">
-                        <i class="fa fa-plus"></i> 添加商品
-                    </a>
-                </div>
+        <main class="col-md-10 p-4">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="mb-0">商品管理</h2>
+                <a href="/admin/products/add" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> 添加商品
+                </a>
             </div>
 
-            <!-- 提示信息 -->
-            <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
-                <span th:text="${success}"></span>
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-            <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
-                <span th:text="${error}"></span>
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-
-            <!-- 搜索框 -->
-            <div class="card mb-3">
-                <div class="card-body">
-                    <form action="/admin/products" method="get" class="d-flex align-items-center">
-                        <div class="input-group search-box me-2">
-                            <input type="text" class="form-control" name="keyword"
-                                   th:value="${param.keyword}"
-                                   placeholder="请输入商品名称、品牌或型号...">
-                            <button class="btn btn-primary" type="submit">
-                                <i class="fa fa-search"></i> 搜索
-                            </button>
+            <!-- 统计卡片 -->
+            <div class="row mb-4">
+                <div class="col-md-3 mb-3">
+                    <div class="card stat-card">
+                        <div class="card-body d-flex align-items-center">
+                            <div class="stat-icon bg-primary me-3">
+                                <i class="fa fa-mobile"></i>
+                            </div>
+                            <div>
+                                <h6 class="card-title mb-0">总商品数</h6>
+                                <h3 class="mb-0">256</h3>
+                            </div>
                         </div>
-                        <a href="/admin/products" class="btn btn-secondary">
-                            <i class="fa fa-refresh"></i> 重置
-                        </a>
-                    </form>
+                    </div>
                 </div>
+                <div class="col-md-3 mb-3">
+                    <div class="card stat-card">
+                        <div class="card-body d-flex align-items-center">
+                            <div class="stat-icon bg-success me-3">
+                                <i class="fa fa-check-circle"></i>
+                            </div>
+                            <div>
+                                <h6 class="card-title mb-0">已上架</h6>
+                                <h3 class="mb-0">198</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <div class="card stat-card">
+                        <div class="card-body d-flex align-items-center">
+                            <div class="stat-icon bg-warning me-3">
+                                <i class="fa fa-exclamation-triangle"></i>
+                            </div>
+                            <div>
+                                <h6 class="card-title mb-0">库存预警</h6>
+                                <h3 class="mb-0">12</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <div class="card stat-card">
+                        <div class="card-body d-flex align-items-center">
+                            <div class="stat-icon bg-danger me-3">
+                                <i class="fa fa-times-circle"></i>
+                            </div>
+                            <div>
+                                <h6 class="card-title mb-0">已售罄</h6>
+                                <h3 class="mb-0">8</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 搜索栏 -->
+            <div class="search-bar mb-4">
+                <form action="/admin/products" method="get" class="d-flex">
+                    <input type="text" class="form-control me-2" name="keyword"
+                           th:value="${param.keyword}" placeholder="搜索商品名称、品牌或型号...">
+                    <button class="btn btn-primary me-2" type="submit">
+                        <i class="fa fa-search"></i> 搜索
+                    </button>
+                    <a href="/admin/products" class="btn btn-outline-secondary">重置</a>
+                </form>
             </div>
 
             <!-- 商品列表 -->
-            <div class="card">
+            <div class="card table-card">
                 <div class="card-body">
                     <div class="table-responsive">
-                        <table class="table table-hover">
+                        <table class="table table-hover align-middle">
                             <thead>
                             <tr>
-                                <th>ID</th>
-                                <th>图片</th>
-                                <th>商品名称</th>
-                                <th>品牌</th>
-                                <th>型号</th>
+                                <th>商品</th>
                                 <th>分类</th>
                                 <th>价格</th>
                                 <th>库存</th>
                                 <th>状态</th>
-                                <th>创建时间</th>
                                 <th>操作</th>
                             </tr>
                             </thead>
                             <tbody>
                             <tr th:each="product : ${products}">
-                                <td th:text="${product.id}">1</td>
                                 <td>
-                                    <img th:src="${product.image}" th:alt="${product.n}"
-                                         class="product-img rounded">
+                                    <div class="d-flex align-items-center">
+                                        <img th:src="${product.image}" class="product-img me-3">
+                                        <div>
+                                            <div class="fw-bold" th:text="${product.n}">商品名称</div>
+                                            <small class="text-muted">
+                                                <span th:text="${product.brand}">品牌</span> |
+                                                <span th:text="${product.model}">型号</span>
+                                            </small>
+                                        </div>
+                                    </div>
                                 </td>
-                                <td th:text="${product.n}">商品名称</td>
-                                <td th:text="${product.brand}">品牌</td>
-                                <td th:text="${product.model}">型号</td>
                                 <td th:text="${product.categoryN}">分类</td>
-                                <td>￥<span th:text="${#numbers.formatDecimal(product.price, 1, 2)}">0.00</span></td>
+                                <td class="fw-bold">￥<span th:text="${#numbers.formatDecimal(product.price, 1, 2)}">0.00</span></td>
                                 <td>
-                                    <span th:classappend="${product.stock == 0 ? 'stock-out' : (product.stock < 10 ? 'stock-low' : '')}">
-                                        <span th:text="${product.stock}">0</span>
-                                        <span th:if="${product.stock == 0}"> (已售罄)</span>
-                                        <span th:if="${product.stock > 0 && product.stock < 10}"> (库存紧张)</span>
-                                    </span>
+                                    <span class="badge"
+                                          th:classappend="${product.stock == 0 ? 'bg-danger' : (product.stock < 10 ? 'bg-warning' : 'bg-success')}"
+                                          th:text="${product.stock}">0</span>
                                 </td>
                                 <td>
-                                    <span th:classappend="${product.status == 1 ? 'status-active' : 'status-inactive'}">
-                                        <i class="fa" th:classappend="${product.status == 1 ? 'fa-check-circle' : 'fa-times-circle'}"></i>
-                                        <span th:text="${product.status == 1 ? '上架' : '下架'}">上架</span>
-                                    </span>
+                                    <span class="badge badge-status"
+                                          th:classappend="${product.status == 1 ? 'bg-success' : 'bg-secondary'}"
+                                          th:text="${product.status == 1 ? '已上架' : '已下架'}">状态</span>
                                 </td>
-                                <td th:text="${#dates.format(product.createTime, 'yyyy-MM-dd')}">2025-01-14</td>
                                 <td>
                                     <a th:href="@{/admin/products/edit/{id}(id=${product.id})}"
-                                       class="btn btn-sm btn-primary" title="编辑">
+                                       class="btn btn-sm btn-outline-primary">
                                         <i class="fa fa-edit"></i>
                                     </a>
-                                    <button class="btn btn-sm btn-danger delete-btn"
+                                    <button class="btn btn-sm btn-outline-danger delete-btn"
                                             th:data-id="${product.id}"
-                                            th:data-name="${product.n}"
-                                            title="删除">
+                                            th:data-name="${product.n}">
                                         <i class="fa fa-trash"></i>
                                     </button>
                                 </td>
                             </tr>
                             </tbody>
                         </table>
-                    </div>
-
-                    <div th:if="${products.isEmpty()}" class="text-center py-4">
-                        <p class="text-muted">
-                            <span th:if="${param.keyword}">未找到匹配的商品</span>
-                            <span th:unless="${param.keyword}">暂无商品数据</span>
-                        </p>
                     </div>
                 </div>
             </div>
@@ -225,7 +320,6 @@
             </div>
             <div class="modal-body">
                 <p>确定要删除商品 <strong id="deleteProductName"></strong> 吗？</p>
-                <p class="text-danger">删除后将无法恢复！</p>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
@@ -242,11 +336,8 @@
 <script>
     $(document).ready(function() {
         $('.delete-btn').click(function() {
-            const productId = $(this).data('id');
-            const productName = $(this).data('name');
-
-            $('#deleteProductName').text(productName);
-            $('#deleteForm').attr('action', '/admin/products/delete/' + productId);
+            $('#deleteProductName').text($(this).data('name'));
+            $('#deleteForm').attr('action', '/admin/products/delete/' + $(this).data('id'));
             $('#deleteModal').modal('show');
         });
     });

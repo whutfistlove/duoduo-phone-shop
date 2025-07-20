@@ -1,8 +1,8 @@
 -- 创建数据库
 CREATE DATABASE IF NOT EXISTS `phoneshop` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE `phoneshop`;
+-- 充值记录表
 
--- 用户表
 CREATE TABLE `user` (
                         `id` bigint(20) NOT NULL AUTO_INCREMENT,
                         `usern` varchar(50) NOT NULL COMMENT '用户名',

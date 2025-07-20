@@ -364,12 +364,7 @@
 <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
 <script>
     $(document).ready(function() {
-        const provinces = Object.keys(cityData).sort();
-        const provinceSelect = $('#province');
-        provinceSelect.html('<option value="">请选择省份</option>');
-        provinces.forEach(province => {
-            provinceSelect.append(`<option value="${province}">${province}</option>`);
-        });
+
         // 城市数据
         const cityData = {
             '北京市': {
@@ -558,7 +553,12 @@
                 '离岛': ['嘉模堂区', '圣方济各堂区']
             }
         };
-
+        const provinces = Object.keys(cityData).sort();
+        const provinceSelect = $('#province');
+        provinceSelect.html('<option value="">请选择省份</option>');
+        provinces.forEach(province => {
+            provinceSelect.append(`<option value="${province}">${province}</option>`);
+        });
         // 省份改变时更新城市
         $('#province').change(function() {
             const province = $(this).val();

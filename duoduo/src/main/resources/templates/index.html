@@ -49,13 +49,15 @@
                 <button class="btn btn-light" type="submit">搜索</button>
             </form>
             <ul class="navbar-nav">
-                <li class="nav-item" th:if="${currentUser != null}">
+                <!-- 只有非管理员用户才显示购物车 -->
+                <li class="nav-item" th:if="${currentUser != null && currentUser.role != 'ADMIN'}">
                     <a class="nav-link" href="/cart">
                         <i class="fa fa-shopping-cart"></i> 购物车
                         <span class="badge bg-danger" id="cartCount">0</span>
                     </a>
                 </li>
-                <li class="nav-item" th:if="${currentUser != null}">
+                <!-- 只有非管理员用户才显示收藏 -->
+                <li class="nav-item" th:if="${currentUser != null && currentUser.role != 'ADMIN'}">
                     <a class="nav-link" href="/favorite">
                         <i class="fa fa-heart"></i> 收藏
                     </a>
@@ -66,8 +68,8 @@
                     </a>
                     <ul class="dropdown-menu">
                         <li><a class="dropdown-item" href="/user/profile">个人中心</a></li>
-<!--                        <li><a class="dropdown-item" href="/order/list">我的订单</a></li>-->
-<!--                        <li><a class="dropdown-item" href="/address">收货地址</a></li>-->
+                        <!--                        <li><a class="dropdown-item" href="/order/list">我的订单</a></li>-->
+                        <!--                        <li><a class="dropdown-item" href="/address">收货地址</a></li>-->
                         <li th:if="${currentUser.role == 'ADMIN'}">
                             <a class="dropdown-item" href="/admin/dashboard">管理后台</a>
                         </li>
@@ -143,8 +145,8 @@
 <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
 <script th:inline="javascript">
     $(document).ready(function() {
-        // 获取购物车数量
-        if ([[${currentUser != null}]]) {
+        // 只有非管理员用户才获取购物车数量
+        if ([[${currentUser != null && currentUser.role != 'ADMIN'}]]) {
             $.get('/cart/count', function(count) {
                 $('#cartCount').text(count);
             });

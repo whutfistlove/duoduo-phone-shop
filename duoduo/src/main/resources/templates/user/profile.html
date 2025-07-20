@@ -59,12 +59,14 @@
                 </li>
             </ul>
             <ul class="navbar-nav">
-                <li class="nav-item">
+                <!-- 只有非管理员用户才显示购物车 -->
+                <li class="nav-item" th:if="${session.currentUser.role != 'ADMIN'}">
                     <a class="nav-link" href="/cart">
                         <i class="fa fa-shopping-cart"></i> 购物车
                     </a>
                 </li>
-                <li class="nav-item">
+                <!-- 只有非管理员用户才显示收藏 -->
+                <li class="nav-item" th:if="${session.currentUser.role != 'ADMIN'}">
                     <a class="nav-link" href="/favorite">
                         <i class="fa fa-heart"></i> 收藏
                     </a>
@@ -75,8 +77,13 @@
                     </a>
                     <ul class="dropdown-menu">
                         <li><a class="dropdown-item" href="/user/profile">个人中心</a></li>
-<!--                        <li><a class="dropdown-item" href="/order/list">我的订单</a></li>-->
-<!--                        <li><a class="dropdown-item" href="/address">收货地址</a></li>-->
+                        <!-- 非管理员用户显示订单和地址 -->
+                        <li th:if="${session.currentUser.role != 'ADMIN'}"><a class="dropdown-item" href="/order/list">我的订单</a></li>
+                        <li th:if="${session.currentUser.role != 'ADMIN'}"><a class="dropdown-item" href="/address">收货地址</a></li>
+                        <!-- 管理员显示管理后台 -->
+                        <li th:if="${session.currentUser.role == 'ADMIN'}">
+                            <a class="dropdown-item" href="/admin/dashboard">管理后台</a>
+                        </li>
                         <li><hr class="dropdown-divider"></li>
                         <li><a class="dropdown-item" href="/user/logout">退出登录</a></li>
                     </ul>
@@ -98,24 +105,26 @@
                             <i class="fa fa-user"></i> 基本信息
                         </a>
                     </li>
-                    <li class="nav-item">
+                    <!-- 非管理员用户显示完整菜单 -->
+                    <li class="nav-item" th:if="${session.currentUser.role != 'ADMIN'}">
                         <a class="nav-link" href="/order/list">
                             <i class="fa fa-list"></i> 我的订单
                         </a>
                     </li>
-                    <li class="nav-item">
+                    <li class="nav-item" th:if="${session.currentUser.role != 'ADMIN'}">
                         <a class="nav-link" href="/address">
                             <i class="fa fa-map-marker"></i> 收货地址
                         </a>
                     </li>
-<!--                    <li class="nav-item">-->
-<!--                        <a class="nav-link" href="/favorite">-->
-<!--                            <i class="fa fa-heart"></i> 我的收藏-->
-<!--                        </a>-->
-<!--                    </li>-->
-                    <li class="nav-item">
+                    <li class="nav-item" th:if="${session.currentUser.role != 'ADMIN'}">
                         <a class="nav-link" href="/user/recharge">
                             <i class="fa fa-credit-card"></i> 账户充值
+                        </a>
+                    </li>
+                    <!-- 管理员显示管理功能 -->
+                    <li class="nav-item" th:if="${session.currentUser.role == 'ADMIN'}">
+                        <a class="nav-link" href="/admin/dashboard">
+                            <i class="fa fa-dashboard"></i> 管理后台
                         </a>
                     </li>
                 </ul>
@@ -165,12 +174,22 @@
                                 <input type="text" class="form-control" id="realN" name="realN" th:value="${user.realN}">
                             </div>
                         </div>
-                        <div class="row mb-3">
+                        <!-- 只有非管理员用户显示账户余额 -->
+                        <div class="row mb-3" th:if="${session.currentUser.role != 'ADMIN'}">
                             <label class="col-sm-3 col-form-label">账户余额：</label>
                             <div class="col-sm-9">
                                 <p class="form-control-plaintext">
                                     <span class="text-danger h5">￥<span th:text="${#numbers.formatDecimal(user.balance, 1, 2)}">0.00</span></span>
                                     <a href="/user/recharge" class="btn btn-sm btn-primary ms-3">充值</a>
+                                </p>
+                            </div>
+                        </div>
+                        <!-- 管理员显示角色信息 -->
+                        <div class="row mb-3" th:if="${session.currentUser.role == 'ADMIN'}">
+                            <label class="col-sm-3 col-form-label">用户角色：</label>
+                            <div class="col-sm-9">
+                                <p class="form-control-plaintext">
+                                    <span class="badge bg-danger">管理员</span>
                                 </p>
                             </div>
                         </div>
