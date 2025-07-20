@@ -234,7 +234,7 @@
                                             <i class="fas fa-truck"></i>
                                         </button>
                                     </form>
-                                    <button th:if="${order.status == 4}"
+                                    <button th:if="${order.status == 0 or order.status == 4}"
                                             class="btn btn-danger btn-icon delete-btn"
                                             th:data-id="${order.id}"
                                             title="删除">
