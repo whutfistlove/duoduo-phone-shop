@@ -3,6 +3,8 @@ package com.duoduo.phoneshop.controller;
 import com.alipay.api.AlipayApiException;
 import com.duoduo.phoneshop.entity.Order;
 import com.duoduo.phoneshop.entity.User;
+import com.duoduo.phoneshop.entity.RechargeOrder;
+import com.duoduo.phoneshop.mapper.RechargeOrderMapper;
 import com.duoduo.phoneshop.service.AlipayService;
 import com.duoduo.phoneshop.service.OrderService;
 import com.duoduo.phoneshop.service.UserService;
@@ -38,6 +40,9 @@ public class AlipayController {
     @Autowired
     private OrderService orderService;
 
+    @Autowired
+    private RechargeOrderMapper rechargeOrderMapper;
+
     /**
      * 创建充值支付订单
      */
@@ -57,16 +62,23 @@ public class AlipayController {
         }
 
         try {
-            // 生成订单号
+            // 生成订单号 - 确保添加了RECHARGE_前缀
             String outTradeNo = alipayService.generateTradeNo("RECHARGE");
 
-            // 保存充值订单信息到session（实际项目应该保存到数据库）
-            Map<String, Object> rechargeInfo = new HashMap<>();
-            rechargeInfo.put("outTradeNo", outTradeNo);
-            rechargeInfo.put("userId", currentUser.getId());
-            rechargeInfo.put("amount", amount);
-            rechargeInfo.put("status", "PENDING");
-            session.setAttribute("recharge_" + outTradeNo, rechargeInfo);
+            log.info("生成充值订单号: {}", outTradeNo);
+
+            // 创建充值订单并保存到数据库
+            RechargeOrder rechargeOrder = new RechargeOrder();
+            rechargeOrder.setOrderNo(outTradeNo);
+            rechargeOrder.setUserId(currentUser.getId());
+            rechargeOrder.setAmount(amount);
+            rechargeOrder.setStatus(0); // 待支付
+
+            // 保存到数据库
+            rechargeOrderMapper.insert(rechargeOrder);
+
+            log.info("创建充值订单成功: orderNo={}, userId={}, amount={}",
+                    outTradeNo, currentUser.getId(), amount);
 
             // 创建支付宝支付
             String subject = "多多手机商城-账户充值";
@@ -76,7 +88,7 @@ public class AlipayController {
             result.put("form", form);
             result.put("outTradeNo", outTradeNo);
 
-        } catch (AlipayApiException e) {
+        } catch (Exception e) {
             log.error("创建充值订单失败", e);
             result.put("success", false);
             result.put("message", "创建支付订单失败，请重试");
@@ -86,54 +98,148 @@ public class AlipayController {
     }
 
     /**
-     * 创建订单支付
+     * 支付宝异步通知 - 加强版
      */
-    @PostMapping("/order/create")
+    @RequestMapping(value = "/notify", method = {RequestMethod.GET, RequestMethod.POST})
     @ResponseBody
-    public Map<String, Object> createOrderPayment(
-            @RequestParam Long orderId,
-            HttpSession session) {
+    public String notifyCallback(HttpServletRequest request) {
+        log.info("========== 支付宝异步通知开始 ==========");
 
-        Map<String, Object> result = new HashMap<>();
+        String method = request.getMethod();
+        log.info("请求方式: {}", method);
 
-        User currentUser = (User) session.getAttribute("currentUser");
-        if (currentUser == null) {
-            result.put("success", false);
-            result.put("message", "请先登录");
-            return result;
+        // 获取所有参数
+        Map<String, String> params = new HashMap<>();
+        Map<String, String[]> requestParams = request.getParameterMap();
+
+        for (String name : requestParams.keySet()) {
+            String[] values = requestParams.get(name);
+            String valueStr = "";
+            for (int i = 0; i < values.length; i++) {
+                valueStr = (i == values.length - 1) ? valueStr + values[i]
+                        : valueStr + values[i] + ",";
+            }
+            params.put(name, valueStr);
         }
+
+        log.info("支付宝异步通知参数: {}", params);
 
         try {
-            // 获取订单信息
-            Order order = orderService.getOrderById(orderId);
-            if (order == null || !order.getUserId().equals(currentUser.getId())) {
-                result.put("success", false);
-                result.put("message", "订单不存在");
-                return result;
+            // 验证签名
+            boolean signVerified = alipayService.verifySignature(params);
+            log.info("签名验证结果: {}", signVerified);
+
+            if (signVerified) {
+                // 获取关键参数
+                String outTradeNo = params.get("out_trade_no");
+                String tradeStatus = params.get("trade_status");
+                String tradeNo = params.get("trade_no");
+                String totalAmount = params.get("total_amount");
+
+                log.info("订单号: {}, 交易状态: {}, 支付宝交易号: {}, 金额: {}",
+                        outTradeNo, tradeStatus, tradeNo, totalAmount);
+
+                if ("TRADE_SUCCESS".equals(tradeStatus) || "TRADE_FINISHED".equals(tradeStatus)) {
+                    log.info("支付成功，开始处理业务逻辑");
+
+                    // 判断是充值还是订单支付
+                    if (outTradeNo != null && outTradeNo.startsWith("RECHARGE_")) {
+                        log.info("处理充值订单");
+                        processRechargeResult(outTradeNo, tradeNo, totalAmount);
+                    } else if (outTradeNo != null && outTradeNo.startsWith("ORDER_")) {
+                        log.info("处理订单支付");
+                        processOrderPaymentResult(params);
+                    } else {
+                        log.warn("未知的订单类型: {}", outTradeNo);
+                    }
+                } else {
+                    log.warn("交易状态不是成功状态: {}", tradeStatus);
+                }
+
+                log.info("异步通知处理完成，返回success");
+                return "success";
+            } else {
+                log.error("签名验证失败！");
+                return "fail";
+            }
+        } catch (Exception e) {
+            log.error("处理异步通知异常", e);
+            return "fail";
+        } finally {
+            log.info("========== 支付宝异步通知结束 ==========");
+        }
+    }
+
+    /**
+     * 处理充值结果 - 增强版
+     */
+    private void processRechargeResult(String outTradeNo, String tradeNo, String totalAmount) {
+        log.info("开始处理充值结果 - 订单号: {}, 支付宝交易号: {}, 金额: {}",
+                outTradeNo, tradeNo, totalAmount);
+
+        try {
+            // 1. 查询充值订单
+            RechargeOrder rechargeOrder = rechargeOrderMapper.selectByOrderNo(outTradeNo);
+            if (rechargeOrder == null) {
+                log.error("充值订单不存在: {}", outTradeNo);
+                return;
+            }
+            log.info("查询到充值订单: userId={}, amount={}, status={}",
+                    rechargeOrder.getUserId(), rechargeOrder.getAmount(), rechargeOrder.getStatus());
+
+            // 2. 检查订单状态，避免重复处理
+            if (rechargeOrder.getStatus() != 0) {
+                log.warn("充值订单已处理，跳过: orderNo={}, status={}",
+                        outTradeNo, rechargeOrder.getStatus());
+                return;
             }
 
-            if (order.getStatus() != 0) {
-                result.put("success", false);
-                result.put("message", "订单状态错误");
-                return result;
+            // 3. 验证金额
+            BigDecimal orderAmount = rechargeOrder.getAmount();
+            BigDecimal payAmount = new BigDecimal(totalAmount);
+            if (orderAmount.compareTo(payAmount) != 0) {
+                log.error("支付金额不匹配！订单金额: {}, 支付金额: {}", orderAmount, payAmount);
+                return;
             }
 
-            // 创建支付宝支付
-            String subject = "多多手机商城-订单支付";
-            String body = "订单号：" + order.getOrderNo();
-            String form = alipayService.createOrderPayment(order.getOrderNo(), order.getPayAmount(), subject, body);
+            // 4. 更新充值订单状态
+            log.info("更新充值订单状态为已支付");
+            int updateResult = rechargeOrderMapper.updateStatus(outTradeNo, 1, tradeNo);
+            log.info("更新充值订单结果: {}", updateResult);
 
-            result.put("success", true);
-            result.put("form", form);
-            result.put("orderNo", order.getOrderNo());
+            // 5. 查询用户当前余额
+            User userBefore = userService.getUserById(rechargeOrder.getUserId());
+            log.info("充值前用户余额: userId={}, balance={}",
+                    userBefore.getId(), userBefore.getBalance());
+
+            // 6. 执行用户账户充值
+            boolean rechargeSuccess = userService.recharge(rechargeOrder.getUserId(), payAmount);
+            log.info("用户充值结果: {}", rechargeSuccess);
+
+            if (rechargeSuccess) {
+                // 7. 再次查询确认余额
+                User userAfter = userService.getUserById(rechargeOrder.getUserId());
+                log.info("充值后用户余额: userId={}, balance={}",
+                        userAfter.getId(), userAfter.getBalance());
+
+                log.info("用户充值成功: userId={}, amount={}, 新余额={}",
+                        rechargeOrder.getUserId(), payAmount, userAfter.getBalance());
+            } else {
+                log.error("用户充值失败: userId={}, amount={}",
+                        rechargeOrder.getUserId(), payAmount);
+                // 充值失败，更新订单状态为失败
+                rechargeOrderMapper.updateStatus(outTradeNo, 2, tradeNo);
+            }
 
         } catch (Exception e) {
-            log.error("创建订单支付失败", e);
-            result.put("success", false);
-            result.put("message", "创建支付订单失败，请重试");
+            log.error("处理充值结果异常", e);
+            // 发生异常，尝试更新订单状态为失败
+            try {
+                rechargeOrderMapper.updateStatus(outTradeNo, 2, tradeNo);
+            } catch (Exception ex) {
+                log.error("更新订单状态失败", ex);
+            }
         }
-
-        return result;
     }
 
     /**
@@ -141,6 +247,8 @@ public class AlipayController {
      */
     @GetMapping("/return")
     public String returnCallback(HttpServletRequest request, Model model, HttpSession session) {
+        log.info("========== 支付宝同步回调开始 ==========");
+
         Map<String, String> params = new HashMap<>();
         Map<String, String[]> requestParams = request.getParameterMap();
 
@@ -173,113 +281,19 @@ public class AlipayController {
             // 判断是充值还是订单支付
             if (outTradeNo.startsWith("RECHARGE_")) {
                 model.addAttribute("type", "recharge");
-                // 处理充值结果
-                processRechargeResult(params, session);
             } else if (outTradeNo.startsWith("ORDER_")) {
                 model.addAttribute("type", "order");
-                // 订单支付结果处理在异步通知中进行
             }
 
+            log.info("同步回调处理成功");
         } else {
             model.addAttribute("success", false);
             model.addAttribute("message", "签名验证失败");
+            log.error("同步回调签名验证失败");
         }
 
+        log.info("========== 支付宝同步回调结束 ==========");
         return "user/pay-result";
-    }
-
-    /**
-     * 支付宝异步通知 - 同时支持GET和POST请求
-     *
-     * 注意：虽然支付宝文档说明异步通知使用POST方式，但在某些情况下
-     * （如支付宝验证通知URL时）可能会发送GET请求，所以这里同时支持两种方式
-     */
-    @RequestMapping(value = "/notify", method = {RequestMethod.GET, RequestMethod.POST})
-    @ResponseBody
-    public String notifyCallback(HttpServletRequest request, HttpSession session) {
-        String method = request.getMethod();
-        log.info("支付宝异步通知请求方式: {}", method);
-
-        // 如果是GET请求，可能是支付宝在验证URL，直接返回success
-        if ("GET".equalsIgnoreCase(method)) {
-            log.info("支付宝GET请求验证通知URL");
-            return "success";
-        }
-
-        Map<String, String> params = new HashMap<>();
-        Map<String, String[]> requestParams = request.getParameterMap();
-
-        for (String name : requestParams.keySet()) {
-            String[] values = requestParams.get(name);
-            String valueStr = "";
-            for (int i = 0; i < values.length; i++) {
-                valueStr = (i == values.length - 1) ? valueStr + values[i]
-                        : valueStr + values[i] + ",";
-            }
-            params.put(name, valueStr);
-        }
-
-        log.info("支付宝异步通知参数: {}", params);
-
-        // 验证签名
-        boolean signVerified = alipayService.verifySignature(params);
-
-        if (signVerified) {
-            // 处理支付结果
-            String outTradeNo = params.get("out_trade_no");
-            String tradeStatus = params.get("trade_status");
-
-            if ("TRADE_SUCCESS".equals(tradeStatus) || "TRADE_FINISHED".equals(tradeStatus)) {
-                // 判断是充值还是订单支付
-                if (outTradeNo.startsWith("RECHARGE_")) {
-                    // 处理充值
-                    processRechargeResult(params, session);
-                } else {
-                    // 处理订单支付
-                    processOrderPaymentResult(params);
-                }
-            }
-
-            // 返回success告诉支付宝已收到通知
-            return "success";
-        } else {
-            log.error("异步通知签名验证失败");
-            return "fail";
-        }
-    }
-
-    /**
-     * 处理充值结果
-     */
-    private void processRechargeResult(Map<String, String> params, HttpSession session) {
-        String outTradeNo = params.get("out_trade_no");
-        String tradeStatus = params.get("trade_status");
-        String totalAmount = params.get("total_amount");
-
-        log.info("处理充值结果 - 订单号: {}, 状态: {}, 金额: {}", outTradeNo, tradeStatus, totalAmount);
-
-        if ("TRADE_SUCCESS".equals(tradeStatus) || "TRADE_FINISHED".equals(tradeStatus)) {
-            // 从session获取充值信息（实际项目应该从数据库获取）
-            Map<String, Object> rechargeInfo = (Map<String, Object>) session.getAttribute("recharge_" + outTradeNo);
-            if (rechargeInfo != null && "PENDING".equals(rechargeInfo.get("status"))) {
-                Long userId = (Long) rechargeInfo.get("userId");
-                BigDecimal amount = new BigDecimal(totalAmount);
-
-                // 执行充值
-                if (userService.recharge(userId, amount)) {
-                    rechargeInfo.put("status", "SUCCESS");
-                    session.setAttribute("recharge_" + outTradeNo, rechargeInfo);
-
-                    // 更新session中的用户信息
-                    User user = userService.getUserById(userId);
-                    if (user != null) {
-                        session.setAttribute("currentUser", user);
-                    }
-
-                    log.info("用户充值成功: userId={}, amount={}", userId, amount);
-                }
-            }
-        }
     }
 
     /**
@@ -291,13 +305,14 @@ public class AlipayController {
         String totalAmount = params.get("total_amount");
         String tradeNo = params.get("trade_no");
 
-        log.info("处理订单支付结果 - 订单号: {}, 状态: {}, 金额: {}", outTradeNo, tradeStatus, totalAmount);
+        log.info("处理订单支付结果 - 订单号: {}, 状态: {}, 金额: {}",
+                outTradeNo, tradeStatus, totalAmount);
 
         if ("TRADE_SUCCESS".equals(tradeStatus) || "TRADE_FINISHED".equals(tradeStatus)) {
             // 更新订单状态为已支付
             Order order = orderService.getOrderByOrderNo(outTradeNo);
             if (order != null && order.getStatus() == 0) {
-                // 这里应该调用一个新的方法来更新订单支付状态，而不是直接扣余额
+                // 调用订单支付状态更新方法
                 orderService.updateOrderPayStatus(order.getId(), tradeNo, "alipay");
                 log.info("订单支付成功: {}", outTradeNo);
             }

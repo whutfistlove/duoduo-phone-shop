@@ -11,9 +11,9 @@ alipay:
   # ??????????????????
   alipayPublicKey: MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAwhYSKaRIFnV2ByEic38Qiqyz9XvA3p1Ky4c6EQmQ6F8xOGJHZ7Xixx4LM10MftsWT0oNNPWaLDZp43Lo9IDaHmx/8bpxoaSOCxOSQ6Y97bkDNoIUwjpJUa89Jn1DlPJ1A78MJTuoCXhjRo3iUKyMGM6MS07OpBKbQVwFaxIkXqr9tK1KY8gnxSOKNsQ0OT8rQLNnQNw1H+hGMPjw5panJEwPdMHDZPC6MUgSB7PsDLZcDKQih/aJxgEGJOChwKiMFxVHy1pnyqcZmuMEZ3ts9Vi4jfCE8CP3zYtx3DDQ3yYMXi9G4SsujatO3v77aQ8uO29DmaM7VKa8bwpoLVLlmwIDAQAB
   # ????????????????????
-  notifyUrl: http://localhost:8080/alipay/notify
-  # ????????????
-  returnUrl: http://localhost:8080/alipay/return
+  notifyUrl: https://0a224a610fbd.ngrok-free.app/alipay/notify
+
+  returnUrl: https://0a224a610fbd.ngrok-free.app/alipay/return
   # ????
   signType: RSA2
   # ??????

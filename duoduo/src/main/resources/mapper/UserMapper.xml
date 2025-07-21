@@ -46,10 +46,10 @@
             usern LIKE CONCAT('%', #{keyword}, '%') OR
             email LIKE CONCAT('%', #{keyword}, '%') OR
             phone LIKE CONCAT('%', #{keyword}, '%') OR
-            real_n LIKE CONCAT('%', #{keyword}, '%')
+            realn LIKE CONCAT('%', #{keyword}, '%')
             )
         </if>
-        ORDER BY create_time DESC
+        ORDER BY createtime DESC
     </select>
 
     <update id="update" parameterType="com.duoduo.phoneshop.entity.User">

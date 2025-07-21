@@ -167,12 +167,12 @@
         u.id AS u_id,  <!-- 补充用户ID -->
         u.usern AS u_usern,
         a.id AS a_id,  <!-- 补充地址ID -->
-        a.receiver_n AS a_receiverN,
-        a.receiver_phone AS a_receiverPhone,
+        a.receivern AS a_receiverN,
+        a.receiverphone AS a_receiverPhone,
         a.province AS a_province,
         a.city AS a_city,
         a.district AS a_district,
-        a.detail_address AS a_detailAddress
+        a.detailaddress AS a_detailAddress
         FROM `order` o
         LEFT JOIN user u ON o.userId = u.id
         LEFT JOIN address a ON o.addressId = a.id

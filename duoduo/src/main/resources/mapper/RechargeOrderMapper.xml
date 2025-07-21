@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.duoduo.phoneshop.mapper.RechargeOrderMapper">
+
+    <!-- 结果映射 -->
+    <resultMap id="RechargeOrderMap" type="com.duoduo.phoneshop.entity.RechargeOrder">
+        <id column="id" property="id"/>
+        <result column="order_no" property="orderNo"/>
+        <result column="user_id" property="userId"/>
+        <result column="amount" property="amount"/>
+        <result column="status" property="status"/>
+        <result column="pay_time" property="payTime"/>
+        <result column="trade_no" property="tradeNo"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+
+    <!-- 插入充值订单 -->
+    <insert id="insert" parameterType="com.duoduo.phoneshop.entity.RechargeOrder">
+        INSERT INTO recharge_order (order_no, user_id, amount, status)
+        VALUES (#{orderNo}, #{userId}, #{amount}, #{status})
+    </insert>
+
+    <!-- 根据订单号查询 -->
+    <select id="selectByOrderNo" resultMap="RechargeOrderMap">
+        SELECT * FROM recharge_order
+        WHERE order_no = #{orderNo}
+    </select>
+
+    <!-- 更新订单状态 -->
+    <update id="updateStatus">
+        UPDATE recharge_order
+        SET status = #{status},
+            trade_no = #{tradeNo},
+            pay_time = NOW()
+        WHERE order_no = #{orderNo}
+    </update>
+
+</mapper>
